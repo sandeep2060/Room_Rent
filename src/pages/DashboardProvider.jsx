@@ -10,6 +10,7 @@ import RoomDetailsModal from '../components/RoomDetailsModal'
 import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
 import FeedbackPopup from '../components/FeedbackPopup'
+import HouseLoader from '../components/HouseLoader'
 
 function ProviderAnalytics() {
     const { profile } = useAuth()
@@ -131,7 +132,11 @@ function ProviderAnalytics() {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" style={{ padding: '1.5rem', textAlign: 'center' }}>Loading requests...</td></tr>
+                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <HouseLoader message="Retrieving your latest requests..." showPercentage={false} />
+                                </div>
+                            </td></tr>
                         ) : bookings.length === 0 ? (
                             <tr><td colSpan="5" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--dash-text-muted)' }}>No booking requests yet.</td></tr>
                         ) : (
@@ -246,7 +251,9 @@ function ProviderListings() {
             </div>
 
             {loading ? (
-                <p>Loading your listings...</p>
+                <div style={{ padding: '4rem', display: 'flex', justifyContent: 'center' }}>
+                    <HouseLoader message="Listing your nests..." showPercentage={false} />
+                </div>
             ) : listings.length === 0 ? (
                 <div className="dashboard-card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--dash-text-muted)' }}>
                     <Home size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />

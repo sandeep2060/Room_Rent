@@ -1,0 +1,182 @@
+.house-loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+    background: var(--bg-solid);
+    border-radius: 20px;
+    width: 300px;
+}
+
+.house-building {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+/* Floor/Foundation */
+.house-floor {
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 10px;
+    opacity: 0;
+    animation: build-layer 0.5s ease forwards 0s;
+}
+
+/* Main Body/Walls */
+.house-body {
+    position: absolute;
+    bottom: 6px;
+    left: 17%;
+    width: 66%;
+    height: 0%;
+    background: var(--dash-surface);
+    border: 3px solid var(--accent);
+    border-bottom: none;
+    opacity: 0;
+    animation: build-walls 1s ease forwards 0.5s;
+}
+
+/* Roof */
+.house-roof {
+    position: absolute;
+    bottom: calc(56% + 6px);
+    left: 10%;
+    width: 80%;
+    height: 0;
+    border-left: 60px solid transparent;
+    border-right: 60px solid transparent;
+    border-bottom: 40px solid var(--accent);
+    transform-origin: bottom;
+    transform: scaleY(0);
+    opacity: 0;
+    animation: build-roof 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 1.5s;
+}
+
+/* Door */
+.house-door {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 0%;
+    background: var(--accent);
+    border-radius: 4px 4px 0 0;
+    opacity: 0;
+    animation: build-details 0.5s ease forwards 2.5s;
+}
+
+/* Windows */
+.house-window {
+    position: absolute;
+    top: 25%;
+    width: 14px;
+    height: 14px;
+    background: var(--accent-dim);
+    border: 2px solid var(--accent);
+    border-radius: 3px;
+    opacity: 0;
+    animation: build-details 0.5s ease forwards 2.8s;
+}
+
+.house-window.left {
+    left: 15%;
+}
+
+.house-window.right {
+    right: 15%;
+}
+
+/* Progress Bar */
+.house-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--dash-border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.house-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+/* Keyframes */
+@keyframes build-layer {
+    0% {
+        transform: translateY(20px) scaleX(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0) scaleX(1);
+        opacity: 1;
+    }
+}
+
+@keyframes build-walls {
+    0% {
+        height: 0%;
+        opacity: 0;
+    }
+
+    100% {
+        height: 50%;
+        opacity: 1;
+    }
+}
+
+@keyframes build-roof {
+    0% {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+@keyframes build-details {
+    0% {
+        transform: scale(0) translateX(-50%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) translateX(-50%);
+        opacity: 1;
+    }
+}
+
+/* Message styling */
+.loader-msg {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: center;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.loader-percent {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+}

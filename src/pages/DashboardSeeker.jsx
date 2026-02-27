@@ -8,6 +8,7 @@ import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
 import RoomDetailsModal from '../components/RoomDetailsModal'
 import FeedbackPopup from '../components/FeedbackPopup'
+import HouseLoader from '../components/HouseLoader'
 
 function SeekerOverview() {
     const { profile } = useAuth()
@@ -237,7 +238,9 @@ function SeekerOverview() {
             <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Matched Rooms ({recommendedRooms.length})</h2>
 
             {loading ? (
-                <p style={{ color: 'var(--dash-text-muted)' }}>Loading rooms...</p>
+                <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <HouseLoader message="Finding your perfect match..." showPercentage={false} />
+                </div>
             ) : recommendedRooms.length === 0 ? (
                 <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--dash-surface)', borderRadius: '12px', border: '1px solid var(--dash-border)' }}>
                     <Search size={48} color="var(--dash-text-muted)" style={{ margin: '0 auto 1rem' }} />
@@ -372,7 +375,9 @@ function SeekerSaved() {
             <p className="dashboard-subtitle">Your curated list of properties.</p>
 
             {loading ? (
-                <p>Loading saved rooms...</p>
+                <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <HouseLoader message="Fetching your wishlist..." showPercentage={false} />
+                </div>
             ) : savedRooms.length === 0 ? (
                 <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--dash-surface)', borderRadius: '12px', marginTop: '2rem' }}>
                     <Heart size={48} color="var(--dash-text-muted)" style={{ margin: '0 auto 1rem' }} />
@@ -457,7 +462,9 @@ function SeekerBookings() {
 
             <div className="dashboard-card" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {loading ? (
-                    <p>Loading your bookings...</p>
+                    <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <HouseLoader message="Checking your bookings..." showPercentage={false} />
+                    </div>
                 ) : bookings.length === 0 ? (
                     <p style={{ color: 'var(--dash-text-muted)' }}>You haven't made any booking requests yet.</p>
                 ) : (
