@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
 import FeedbackPopup from '../components/FeedbackPopup'
+import HouseLoader from '../components/HouseLoader'
 
 const districts = [
     'Bhojpur', 'Dhankuta', 'Ilam', 'Jhapa', 'Khotang', 'Morang', 'Okhaldhunga', 'Panchthar', 'Sankhuwasabha', 'Solukhumbu', 'Sunsari', 'Taplejung', 'Terhathum', 'Udayapur',
@@ -288,6 +289,7 @@ export default function Signup() {
                     {loading ? 'Submitting...' : 'Create account'}
                 </button>
             </form>
+            {loading && <HouseLoader message="Setting up your new nest..." />}
             {feedback && (
                 <FeedbackPopup
                     type={feedback.type}

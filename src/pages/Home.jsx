@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { MapPin, Search, Calendar, Users, Heart } from 'lucide-react'
+import HouseLoader from '../components/HouseLoader'
 
 const steps = [
     {
@@ -206,7 +207,9 @@ export default function Home() {
                 </h2>
                 <div className="listings-grid">
                     {loading ? (
-                        <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)' }}>Fetching latest rooms in Nepal...</p>
+                        <div style={{ gridColumn: '1/-1', padding: '4rem', display: 'flex', justifyContent: 'center' }}>
+                            <HouseLoader message="Fetching latest rooms in Nepal..." showPercentage={false} />
+                        </div>
                     ) : rooms.length === 0 ? (
                         <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)' }}>No rooms posted yet. Be the first!</p>
                     ) : (

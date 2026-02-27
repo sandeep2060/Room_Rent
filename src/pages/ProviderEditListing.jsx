@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { ImagePlus } from 'lucide-react'
+import HouseLoader from '../components/HouseLoader'
 
 // Fix for default Leaflet marker icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -147,7 +148,7 @@ export default function ProviderEditListing() {
     }
 
     if (fetching) {
-        return <div style={{ padding: '2rem' }}>Loading room details...</div>
+        return <HouseLoader message="Retrieving your nest details..." />
     }
 
     return (
@@ -279,6 +280,7 @@ export default function ProviderEditListing() {
                     {loading ? 'Saving Changes...' : 'Save Changes'}
                 </button>
             </form>
+            {loading && <HouseLoader message="Saving your changes..." />}
         </div>
     )
 }

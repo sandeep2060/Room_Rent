@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import FeedbackPopup from '../components/FeedbackPopup'
+import HouseLoader from '../components/HouseLoader'
 
 export default function Login() {
     const [searchParams] = useSearchParams()
@@ -121,6 +122,7 @@ export default function Login() {
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
             </form>
+            {loading && <HouseLoader message="Verifying your digital keys..." />}
             {feedback && (
                 <FeedbackPopup
                     type={feedback.type}

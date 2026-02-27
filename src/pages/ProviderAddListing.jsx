@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { ImagePlus, MapPin, CheckCircle } from 'lucide-react'
+import HouseLoader from '../components/HouseLoader'
 
 // Fix for default Leaflet marker icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -322,6 +323,7 @@ export default function ProviderAddListing() {
                 </button>
 
             </form>
+            {loading && <HouseLoader message="Building your new listing..." />}
         </div>
     )
 }

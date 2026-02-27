@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { User, MapPin, Phone, Calendar, Camera, Upload } from 'lucide-react'
+import HouseLoader from '../components/HouseLoader'
 
 export default function ProfileSettings() {
     const { profile } = useAuth()
@@ -133,7 +134,7 @@ export default function ProfileSettings() {
         }
     }
 
-    if (loading) return <div style={{ padding: '2rem' }}>Loading profile...</div>
+    if (loading) return <HouseLoader message="Retrieving your profile..." />
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -232,6 +233,7 @@ export default function ProfileSettings() {
                     </button>
                 </div>
             </form>
+            {saving && <HouseLoader message="Updating your professional profile..." />}
         </div>
     )
 }
