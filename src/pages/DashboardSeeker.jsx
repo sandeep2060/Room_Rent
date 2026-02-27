@@ -1,41 +1,252 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
-import { MapPin, Calendar, CreditCard, Camera } from 'lucide-react'
+import { MapPin, Calendar, CreditCard, Camera, Heart } from 'lucide-react'
+import { Filter, Search } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import Messages from '../components/Messages'
+import ProfileSettings from '../components/ProfileSettings'
+import RoomDetailsModal from '../components/RoomDetailsModal'
 
 function SeekerOverview() {
+    const { profile } = useAuth()
+    const [recommendedRooms, setRecommendedRooms] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    // Search & Filter States
+    const [searchTerm, setSearchTerm] = useState('')
+    const [categoryFilter, setCategoryFilter] = useState('all') // all, monthly, daily, nightly
+    const [genderFilter, setGenderFilter] = useState(profile?.gender || 'all')
+    const [minPrice, setMinPrice] = useState('')
+    const [maxPrice, setMaxPrice] = useState('')
+
+    // Selected room for popup details
+    const [selectedRoom, setSelectedRoom] = useState(null)
+
+    // Re-fetch rooms when filters or profile changes
+    useEffect(() => {
+        if (profile) fetchRecommendations()
+    }, [profile, searchTerm, categoryFilter, genderFilter, minPrice, maxPrice])
+
+    async function fetchRecommendations() {
+        try {
+            setLoading(true)
+            let query = supabase
+                .from('rooms')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+
+            // 1. Text Search (Location or Title)
+            if (searchTerm) {
+                // Supabase doesn't easily do OR ilike without or(), 
+                // Using address as primary text search for location
+                query = query.ilike('address', `%${searchTerm}%`)
+            } else if (profile?.location && !searchTerm) {
+                // Fallback to profile preferred location if no strict search is active
+                query = query.ilike('address', `%${profile.location}%`)
+            }
+
+            // 2. Category Filter
+            if (categoryFilter !== 'all') {
+                query = query.eq('rent_category', categoryFilter)
+            }
+
+            // 3. Gender Filter
+            if (genderFilter === 'boy') {
+                query = query.in('gender_preference', ['all', 'boy'])
+            } else if (genderFilter === 'girl') {
+                query = query.in('gender_preference', ['all', 'girl'])
+            } else if (profile?.gender === 'boy' && genderFilter === 'all') {
+                query = query.in('gender_preference', ['all', 'boy']) // strict fallback
+            } else if (profile?.gender === 'girl' && genderFilter === 'all') {
+                query = query.in('gender_preference', ['all', 'girl'])
+            }
+
+            // 4. Price Filter
+            if (minPrice && !isNaN(minPrice)) {
+                query = query.gte('price_nrs', parseInt(minPrice))
+            }
+            if (maxPrice && !isNaN(maxPrice)) {
+                query = query.lte('price_nrs', parseInt(maxPrice))
+            }
+
+            const { data, error } = await query
+
+            if (error) throw error
+
+            setRecommendedRooms(data || [])
+
+        } catch (error) {
+            console.error('Error fetching recommendations', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    async function handleBookRoom(roomId) {
+        if (!window.confirm('Request to book this room?')) return;
+        try {
+            // Check if already booked
+            const { data: existing, error: checkError } = await supabase
+                .from('bookings')
+                .select('id')
+                .eq('room_id', roomId)
+                .eq('seeker_id', profile.id)
+                .in('status', ['pending', 'accepted'])
+                .single()
+
+            if (existing) {
+                alert('You already have an active booking request for this room!')
+                return
+            }
+
+            // Retrieve room price/provider
+            const room = recommendedRooms.find(r => r.id === roomId)
+
+            const { error } = await supabase.from('bookings').insert([{
+                room_id: roomId,
+                seeker_id: profile.id,
+                provider_id: room.provider_id,
+                start_date: new Date().toISOString().split('T')[0], // Today as placeholder
+                status: 'pending',
+                total_price_nrs: room.price_nrs // Passing base price, real app would calculate Based on dates
+            }])
+
+            if (error) throw error
+            alert('Booking request sent successfully!')
+        } catch (error) {
+            console.error('Error booking room', error)
+            alert('Failed to send booking request.')
+        }
+    }
+
+    async function handleCancelBooking(bookingId) {
+        if (!window.confirm('Are you sure you want to cancel this booking request?')) return;
+        try {
+            const { error } = await supabase
+                .from('bookings')
+                .delete()
+                .eq('id', bookingId)
+                .eq('status', 'pending') // Double check status
+
+            if (error) throw error
+            alert('Booking request cancelled.')
+            fetchRecommendations() // Refresh if needed, though usually bookings are in separate tab
+        } catch (error) {
+            console.error('Error cancelling booking', error)
+            alert('Failed to cancel booking.')
+        }
+    }
+
     return (
         <div>
-            <h1 className="dashboard-title">Welcome back, Seeker</h1>
-            <p className="dashboard-subtitle">Here is a summary of your recent activity.</p>
+            <h1 className="dashboard-title">Welcome back, {profile?.name || 'Seeker'}</h1>
+            <p className="dashboard-subtitle">Find your perfect room with advanced filtering.</p>
 
-            <div className="dashboard-grid" style={{ marginBottom: '2rem' }}>
-                <div className="dashboard-card" style={{ borderLeft: '4px solid var(--accent)' }}>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin size={20} color="var(--accent)" /> active booking</h2>
-                    <p>Pokhara Lakeside - Check-in: Oct 12</p>
-                </div>
-                <div className="dashboard-card" style={{ borderLeft: '4px solid var(--accent2)' }}>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Heart size={20} color="var(--accent2)" /> 12 Saved</h2>
-                    <p>Rooms you are keeping an eye on.</p>
-                </div>
-            </div>
+            {/* Advanced Filters */}
+            <div className="dashboard-card" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--dash-surface)' }}>
 
-            <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Recommendations in Kathmandu</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="dashboard-card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <img src={`https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80&sig=${i}`} alt="Room" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                        <div style={{ padding: '1rem' }}>
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Cozy Studio Thamel</h3>
-                            <p style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Nrs 2,500 <span style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>/night</span></p>
-                        </div>
+                {/* Search Bar */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--dash-bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
+                    <Search size={20} color="var(--dash-text-muted)" />
+                    <input
+                        type="text"
+                        placeholder="Search by location (e.g. Kathmandu, Patan)..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', flex: 1, padding: '0.5rem', color: 'var(--dash-text)', outline: 'none' }}
+                    />
+                </div>
+
+                {/* Filter Controls Row */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Filter size={18} color="var(--dash-text-muted)" />
+                        <span style={{ fontSize: '0.9rem', color: 'var(--dash-text-muted)', fontWeight: 'bold' }}>Filters:</span>
                     </div>
-                ))}
+
+                    <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }}>
+                        <option value="all">All Room Types</option>
+                        <option value="monthly">Monthly Rent</option>
+                        <option value="daily">Daily Rent</option>
+                        <option value="nightly">Nightly Stay</option>
+                    </select>
+
+                    <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }}>
+                        <option value="all">All Genders Acceptable</option>
+                        <option value="boy">Boys Only</option>
+                        <option value="girl">Girls Only</option>
+                    </select>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>Price Nrs:</span>
+                        <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }} />
+                        <span>-</span>
+                        <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }} />
+                    </div>
+                </div>
             </div>
+
+            <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Matched Rooms ({recommendedRooms.length})</h2>
+
+            {loading ? (
+                <p style={{ color: 'var(--dash-text-muted)' }}>Loading rooms...</p>
+            ) : recommendedRooms.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--dash-surface)', borderRadius: '12px', border: '1px solid var(--dash-border)' }}>
+                    <Search size={48} color="var(--dash-text-muted)" style={{ margin: '0 auto 1rem' }} />
+                    <h3 style={{ margin: '0 0 0.5rem' }}>No matching rooms</h3>
+                    <p style={{ color: 'var(--dash-text-muted)', margin: 0 }}>Try adjusting your filters or search term to find more results.</p>
+                </div>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                    {recommendedRooms.map(room => (
+                        <div
+                            key={room.id}
+                            className="dashboard-card"
+                            style={{ padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer', transition: 'transform 0.2s' }}
+                            onClick={() => setSelectedRoom(room)}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(15,23,42,0.6)', borderRadius: '50%', padding: '0.4rem', color: 'white', zIndex: 10, backdropFilter: 'blur(4px)' }}>
+                                <Heart size={20} />
+                            </div>
+                            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80'} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                            <div style={{ padding: '1.25rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.title}</h3>
+                                </div>
+                                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    <MapPin size={14} flexShrink={0} /> {room.address}
+                                </p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <p style={{ color: 'var(--accent)', fontWeight: 'bold', margin: 0, fontSize: '1.1rem' }}>
+                                        Nrs {room.price_nrs}
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)', fontWeight: 'normal' }}>
+                                            /{room.rent_category === 'monthly' ? 'month' : room.rent_category === 'daily' ? 'day' : 'night'}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Room Details Overlay */}
+            {selectedRoom && (
+                <RoomDetailsModal
+                    room={selectedRoom}
+                    onClose={() => setSelectedRoom(null)}
+                    onRequestBook={handleBookRoom}
+                />
+            )}
         </div>
     )
 }
 
-import { Heart } from 'lucide-react'
 
 function SeekerSaved() {
     return (
@@ -70,50 +281,92 @@ function SeekerSaved() {
 }
 
 function SeekerBookings() {
+    const { profile } = useAuth()
+    const [bookings, setBookings] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (profile) fetchBookings()
+    }, [profile])
+
+    async function fetchBookings() {
+        try {
+            const { data, error } = await supabase
+                .from('bookings')
+                .select(`
+                    id, start_date, end_date, status, total_price_nrs,
+                    rooms ( title, address, images )
+                `)
+                .eq('seeker_id', profile.id)
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+            setBookings(data || [])
+        } catch (error) {
+            console.error('Error fetching bookings', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div>
             <h1 className="dashboard-title">My Bookings</h1>
-            <p className="dashboard-subtitle">Manage your past and upcoming stays.</p>
+            <p className="dashboard-subtitle">Manage your requests and upcoming stays.</p>
 
             <div className="dashboard-card" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* Mock booking item */}
-                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBottom: '1.5rem', borderBottom: '1px solid var(--dash-border)' }}>
-                    <img src="https://images.unsplash.com/photo-1520256862855-398228c41684?w=400&q=80" alt="booked" style={{ width: '120px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(52, 211, 153, 0.2)', color: '#34d399', fontSize: '0.75rem', borderRadius: '4px', fontWeight: 'bold' }}>UPCOMING</span>
-                                <h3 style={{ fontSize: '1.2rem', marginTop: '0.5rem', marginBottom: '0.25rem' }}>Lakeside Retreat</h3>
-                                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', margin: 0 }}>Pokhara, Kaski</p>
+                {loading ? (
+                    <p>Loading your bookings...</p>
+                ) : bookings.length === 0 ? (
+                    <p style={{ color: 'var(--dash-text-muted)' }}>You haven't made any booking requests yet.</p>
+                ) : (
+                    bookings.map(booking => (
+                        <div key={booking.id} style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', paddingBottom: '1.5rem', borderBottom: '1px solid var(--dash-border)' }}>
+                            <img src={booking.rooms?.images?.[0] || 'https://images.unsplash.com/photo-1520256862855-398228c41684?w=400&q=80'} alt="booked" style={{ width: '120px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div>
+                                        <span style={{
+                                            padding: '0.25rem 0.5rem',
+                                            background: booking.status === 'accepted' ? 'rgba(52, 211, 153, 0.2)' : booking.status === 'declined' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 209, 102, 0.2)',
+                                            color: booking.status === 'accepted' ? '#34d399' : booking.status === 'declined' ? '#ef4444' : '#ffd166',
+                                            fontSize: '0.75rem', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase'
+                                        }}>
+                                            {booking.status}
+                                        </span>
+                                        <h3 style={{ fontSize: '1.2rem', marginTop: '0.5rem', marginBottom: '0.25rem' }}>{booking.rooms?.title}</h3>
+                                        <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', margin: 0 }}>{booking.rooms?.address}</p>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Nrs {booking.total_price_nrs}</p>
+                                        {booking.status === 'pending' && (
+                                            <button
+                                                onClick={() => {
+                                                    handleCancelBooking(booking.id).then(() => fetchBookings());
+                                                }}
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: '1px solid #ef4444',
+                                                    color: '#ef4444',
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '4px',
+                                                    fontSize: '0.75rem',
+                                                    cursor: 'pointer',
+                                                    marginTop: '0.5rem'
+                                                }}
+                                            >
+                                                Cancel Request
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Calendar size={14} /> {booking.start_date}</span>
+                                </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Nrs 9,600</p>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)', margin: 0 }}>Total (3 nights)</p>
-                            </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Calendar size={14} /> Oct 12 - Oct 15</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><CreditCard size={14} /> Paid</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-                    <img src="https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=400&q=80" alt="booked" style={{ width: '120px', height: '100px', objectFit: 'cover', borderRadius: '8px', opacity: 0.6 }} />
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <span style={{ padding: '0.25rem 0.5rem', background: 'rgba(148, 163, 184, 0.2)', color: 'var(--dash-text-muted)', fontSize: '0.75rem', borderRadius: '4px', fontWeight: 'bold' }}>COMPLETED</span>
-                                <h3 style={{ fontSize: '1.2rem', marginTop: '0.5rem', marginBottom: '0.25rem', color: 'var(--dash-text-muted)' }}>Colorful Room in Thamel</h3>
-                                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', margin: 0 }}>Kathmandu</p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Calendar size={14} /> Sep 01 - Sep 03</span>
-                            <button style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Camera size={14} /> Write Review</button>
-                        </div>
-                    </div>
-                </div>
+                    ))
+                )}
             </div>
         </div>
     )
@@ -123,9 +376,9 @@ function SeekerMessages() {
     return (
         <div>
             <h1 className="dashboard-title">Messages</h1>
-            <p className="dashboard-subtitle">Talk with hosts across Nepal.</p>
-            <div className="dashboard-card" style={{ marginTop: '2rem', height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dash-text-muted)' }}>
-                No messages yet.
+            <p className="dashboard-subtitle">Chat securely with room providers across Nepal.</p>
+            <div style={{ marginTop: '2rem' }}>
+                <Messages />
             </div>
         </div>
     )
@@ -139,7 +392,7 @@ export default function DashboardSeeker() {
                 <Route path="bookings" element={<SeekerBookings />} />
                 <Route path="saved" element={<SeekerSaved />} />
                 <Route path="messages" element={<SeekerMessages />} />
-                <Route path="profile" element={<div><h1 className="dashboard-title">Profile Context Menu goes here</h1></div>} />
+                <Route path="profile" element={<ProfileSettings />} />
             </Routes>
         </DashboardLayout>
     )

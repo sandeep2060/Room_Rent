@@ -43,9 +43,7 @@
     background: var(--sidebar-bg);
     border-right: 1px solid var(--sidebar-border);
     flex-shrink: 0;
-    height: 100vh;
-    position: sticky;
-    top: 0;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     z-index: 40;
@@ -58,6 +56,16 @@
     height: 100%;
     padding: 1.5rem;
     overflow-y: auto;
+    /* Hide scrollbar */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.dash-sidebar-inner::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .dash-brand {

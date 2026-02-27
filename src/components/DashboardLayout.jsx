@@ -1,12 +1,45 @@
 import { NavLink } from 'react-router-dom'
 import { Home, Compass, Heart, MessageSquare, User, Calendar, PlusCircle, PieChart, Menu, X, LogOut } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import './Dashboard.css'
 
 export default function DashboardLayout({ children, role }) {
     const { profile, signOut } = useAuth()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
+
+    useEffect(() => {
+        if (!profile?.id) return
+
+        const fetchUnread = async () => {
+            const { count } = await supabase
+                .from('messages')
+                .select('*', { count: 'exact', head: true })
+                .eq('receiver_id', profile.id)
+                .eq('is_read', false)
+
+            if (count !== null) setUnreadCount(count)
+        }
+
+        fetchUnread()
+
+        const sub = supabase.channel(`public:messages:receiver_id=eq.${profile.id}`)
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${profile.id}` },
+                () => { setUnreadCount(prev => prev + 1) }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${profile.id}` },
+                () => { fetchUnread() }
+            )
+            .subscribe()
+
+        return () => supabase.removeChannel(sub)
+    }, [profile])
 
     const seekerLinks = [
         { name: 'Overview', path: '/dashboard-seeker', icon: Home, end: true },
@@ -22,6 +55,7 @@ export default function DashboardLayout({ children, role }) {
         { name: 'Add Listing', path: '/dashboard-provider/add', icon: PlusCircle },
         { name: 'Requests & Calendar', path: '/dashboard-provider/calendar', icon: Calendar },
         { name: 'Messages', path: '/dashboard-provider/messages', icon: MessageSquare },
+        { name: 'Profile', path: '/dashboard-provider/profile', icon: User },
     ]
 
     const navLinks = role === 'seeker' ? seekerLinks : providerLinks
@@ -45,8 +79,12 @@ export default function DashboardLayout({ children, role }) {
                     </div>
 
                     <div className="dash-user-card">
-                        <div className="dash-avatar">
-                            {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                        <div className="dash-avatar" style={{ overflow: 'hidden' }}>
+                            {profile?.avatar_url ? (
+                                <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'
+                            )}
                         </div>
                         <div className="dash-user-info">
                             <span className="name">{profile?.name || 'User'}</span>
@@ -63,7 +101,14 @@ export default function DashboardLayout({ children, role }) {
                                 className={({ isActive }) => `dash-nav-link ${isActive ? 'active' : ''}`}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <link.icon size={20} />
+                                <div style={{ position: 'relative' }}>
+                                    <link.icon size={20} />
+                                    {link.name === 'Messages' && unreadCount > 0 && (
+                                        <span style={{ position: 'absolute', top: '-5px', right: '-8px', background: '#ef4444', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
+                                </div>
                                 <span>{link.name}</span>
                             </NavLink>
                         ))}
@@ -85,15 +130,22 @@ export default function DashboardLayout({ children, role }) {
 
             {/* Bottom Navigation (Mobile) */}
             <nav className="dash-bottom-nav">
-                {navLinks.slice(0, 4).map((link) => (
+                {navLinks.slice(0, 5).map((link) => (
                     <NavLink
                         key={link.path}
                         to={link.path}
                         end={link.end}
                         className={({ isActive }) => `dash-bottom-link ${isActive ? 'active' : ''}`}
                     >
-                        <link.icon size={22} />
-                        <span className="text-xs mt-1">{link.name.split(' ')[0]}</span>
+                        <div style={{ position: 'relative' }}>
+                            <link.icon size={22} />
+                            {link.name === 'Messages' && unreadCount > 0 && (
+                                <span style={{ position: 'absolute', top: '-4px', right: '-6px', background: '#ef4444', color: 'white', fontSize: '0.6rem', fontWeight: 'bold', width: '14px', height: '14px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </div>
+                        <span className="text-xs mt-1" style={{ fontSize: '0.65rem' }}>{link.name.split(' ')[0]}</span>
                     </NavLink>
                 ))}
             </nav>
