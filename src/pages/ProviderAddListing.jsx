@@ -91,7 +91,7 @@ export default function ProviderAddListing() {
                 latitude: mapPosition.lat,
                 longitude: mapPosition.lng,
                 amenities,
-                images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80'] // Mock image for now
+                images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80']
             }
 
             const { data, error: insertError } = await supabase
@@ -148,10 +148,69 @@ export default function ProviderAddListing() {
 
                     <div className="field">
                         <label>Room Photos</label>
-                        <div style={{ border: '2px dashed var(--dash-border)', padding: '2rem', borderRadius: '8px', textAlign: 'center', color: 'var(--dash-text-muted)', cursor: 'pointer' }}>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            id="room-photos-upload"
+                            onChange={async (e) => {
+                                if (!e.target.files) return;
+                                try {
+                                    setLoading(true);
+                                    const uploadedUrls = [...images];
+                                    for (const file of e.target.files) {
+                                        const fileExt = file.name.split('.').pop();
+                                        const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+                                        const filePath = `rooms/${fileName}`;
+
+                                        const { error: uploadError } = await supabase.storage
+                                            .from('room-images')
+                                            .upload(filePath, file);
+
+                                        if (uploadError) throw uploadError;
+
+                                        const { data: { publicUrl } } = supabase.storage
+                                            .from('room-images')
+                                            .getPublicUrl(filePath);
+
+                                        uploadedUrls.push(publicUrl);
+                                    }
+                                    setImages(uploadedUrls);
+                                } catch (err) {
+                                    console.error('Upload error:', err);
+                                    setError('Failed to upload images.');
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                        />
+                        <div
+                            style={{ border: '2px dashed var(--dash-border)', padding: '2rem', borderRadius: '8px', textAlign: 'center', color: 'var(--dash-text-muted)', cursor: 'pointer' }}
+                            onClick={() => document.getElementById('room-photos-upload').click()}
+                        >
                             <ImagePlus size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
-                            <p>Click to upload photos (Image placeholder)</p>
+                            <p>Click to upload photos</p>
                         </div>
+                        {images.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                                {images.map((url, idx) => (
+                                    <div key={idx} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                                        <img src={url} alt={`Listing ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setImages(images.filter((_, i) => i !== idx));
+                                            }}
+                                            style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
 

@@ -271,4 +271,26 @@
         transform: translateX(0);
         box-shadow: var(--shadow);
     }
+
+    /* Responsive Listings */
+    .dashboard-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 1rem !important;
+        padding: 1.25rem !important;
+    }
+
+    .dashboard-card img {
+        width: 100% !important;
+        height: 200px !important;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Responsive Messages Container */
+    .messages-container {
+        height: calc(100vh - 150px) !important;
+    }
 }

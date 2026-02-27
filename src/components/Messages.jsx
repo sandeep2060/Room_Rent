@@ -12,6 +12,8 @@ export default function Messages() {
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
 
+    const [showThreads, setShowThreads] = useState(true);
+
     // Initial load: fetch all bookings where the user is either seeker or provider
     useEffect(() => {
         if (profile?.id) fetchThreads();
@@ -22,6 +24,9 @@ export default function Messages() {
         if (activeThread) {
             fetchMessages(activeThread.id);
             const subscription = subscribeToMessages(activeThread.id);
+            if (window.innerWidth <= 768) {
+                setShowThreads(false);
+            }
             return () => { supabase.removeChannel(subscription); }
         }
     }, [activeThread]);
@@ -66,7 +71,7 @@ export default function Messages() {
 
             if (error) throw error;
             setThreads(data || []);
-            if (data && data.length > 0) {
+            if (data && data.length > 0 && window.innerWidth > 768) {
                 setActiveThread(data[0]);
             }
         } catch (error) {
@@ -173,9 +178,14 @@ export default function Messages() {
     }
 
     return (
-        <div className="dashboard-card" style={{ display: 'flex', height: '600px', padding: 0, overflow: 'hidden' }}>
+        <div className={`dashboard-card messages-container ${!showThreads ? 'mobile-chat-view' : ''}`} style={{ display: 'flex', height: '600px', padding: 0, overflow: 'hidden' }}>
             {/* Sidebar List of Threads */}
-            <div style={{ width: '30%', borderRight: '1px solid var(--dash-border)', display: 'flex', flexDirection: 'column' }}>
+            <div className="messages-sidebar" style={{
+                width: window.innerWidth > 768 ? '30%' : (showThreads ? '100%' : '0%'),
+                borderRight: '1px solid var(--dash-border)',
+                display: (window.innerWidth > 768 || showThreads) ? 'flex' : 'none',
+                flexDirection: 'column'
+            }}>
                 <div style={{ padding: '1rem', borderBottom: '1px solid var(--dash-border)', background: 'var(--dash-surface)' }}>
                     <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Conversations</h2>
                 </div>
@@ -196,9 +206,9 @@ export default function Messages() {
                                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--dash-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <UserIcon size={20} color="var(--dash-text-muted)" />
                                 </div>
-                                <div>
-                                    <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.25rem' }}>{getOtherParticipantName(thread)}</h3>
-                                    <p style={{ fontSize: '0.8rem', margin: 0, color: 'var(--dash-text-muted)' }}>{thread.rooms?.title}</p>
+                                <div style={{ overflow: 'hidden' }}>
+                                    <h3 style={{ fontSize: '0.95rem', margin: '0 0 0.25rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{getOtherParticipantName(thread)}</h3>
+                                    <p style={{ fontSize: '0.8rem', margin: 0, color: 'var(--dash-text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{thread.rooms?.title}</p>
                                 </div>
                             </div>
                         </div>
@@ -207,15 +217,30 @@ export default function Messages() {
             </div>
 
             {/* Active Thread Chat Area */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--dash-bg)' }}>
+            <div className="chat-area" style={{
+                flex: 1,
+                display: (window.innerWidth > 768 || !showThreads) ? 'flex' : 'none',
+                flexDirection: 'column',
+                background: 'var(--dash-bg)'
+            }}>
                 {activeThread ? (
                     <>
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--dash-border)', background: 'var(--dash-surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <h3 style={{ margin: 0 }}>{getOtherParticipantName(activeThread)}</h3>
-                                <p style={{ fontSize: '0.85rem', margin: '0.25rem 0 0', color: 'var(--dash-text-muted)' }}>Inquiry for: {activeThread.rooms?.title}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                {window.innerWidth <= 768 && (
+                                    <button
+                                        onClick={() => setShowThreads(true)}
+                                        style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '1.2rem', padding: '0.5rem' }}
+                                    >
+                                        ←
+                                    </button>
+                                )}
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1rem' }}>{getOtherParticipantName(activeThread)}</h3>
+                                    <p style={{ fontSize: '0.75rem', margin: '0.1rem 0 0', color: 'var(--dash-text-muted)' }}>{activeThread.rooms?.title}</p>
+                                </div>
                             </div>
-                            <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'rgba(52, 211, 153, 0.2)', color: '#34d399', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                            <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.4rem', background: 'rgba(52, 211, 153, 0.2)', color: '#34d399', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>
                                 {activeThread.status}
                             </span>
                         </div>
@@ -224,7 +249,7 @@ export default function Messages() {
                         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
                             <div style={{ alignSelf: 'center', padding: '0.5rem 1rem', background: 'var(--dash-border)', color: 'var(--dash-text-muted)', fontSize: '0.8rem', borderRadius: '4px', textAlign: 'center', maxWidth: '80%' }}>
-                                This chat is secured. For your safety, do not share phone numbers or email addresses. Do not wire money outside the platform.
+                                This chat is secured. For your safety, do not share phone numbers or email addresses.
                             </div>
 
                             {messages.length === 0 ? (
@@ -233,16 +258,16 @@ export default function Messages() {
                                 messages.map(msg => {
                                     const isMe = msg.sender_id === profile.id;
                                     return (
-                                        <div key={msg.id} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
+                                        <div key={msg.id} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                                             <div style={{
                                                 background: isMe ? 'var(--accent)' : 'var(--dash-surface)',
                                                 color: isMe ? 'white' : 'var(--dash-text)',
                                                 padding: '0.75rem 1rem',
                                                 borderRadius: '8px',
                                                 borderBottomRightRadius: isMe ? '0' : '8px',
-                                                borderBottomLeftRadius: !isMe ? '0' : '8px'
+                                                borderBottomLeftRadius: !isMe ? '0' : '8px',
+                                                fontSize: '0.9rem'
                                             }}>
-                                                {/* Filter again on display just in case */}
                                                 {maskPersonalData(msg.content)}
                                             </div>
                                             <div style={{ fontSize: '0.7rem', color: 'var(--dash-text-muted)', marginTop: '0.25rem', textAlign: isMe ? 'right' : 'left' }}>
@@ -256,21 +281,21 @@ export default function Messages() {
                         </div>
 
                         {/* Input Area */}
-                        <form onSubmit={sendMessage} style={{ padding: '1rem', borderTop: '1px solid var(--dash-border)', background: 'var(--dash-surface)', display: 'flex', gap: '0.5rem' }}>
+                        <form onSubmit={sendMessage} style={{ padding: '0.75rem', borderTop: '1px solid var(--dash-border)', background: 'var(--dash-surface)', display: 'flex', gap: '0.5rem' }}>
                             <input
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Type a message..."
-                                style={{ flex: 1, padding: '0.75rem 1rem', border: '1px solid var(--dash-border)', borderRadius: '4px', background: 'var(--dash-bg)', color: 'var(--dash-text)' }}
+                                style={{ flex: 1, padding: '0.6rem 0.8rem', border: '1px solid var(--dash-border)', borderRadius: '4px', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.9rem' }}
                             />
-                            <button type="submit" disabled={!newMessage.trim()} style={{ background: 'var(--accent)', color: 'white', border: 'none', padding: '0 1.25rem', borderRadius: '4px', cursor: newMessage.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: newMessage.trim() ? 1 : 0.5 }}>
+                            <button type="submit" disabled={!newMessage.trim()} style={{ background: 'var(--accent)', color: 'white', border: 'none', padding: '0 1rem', borderRadius: '4px', cursor: newMessage.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: newMessage.trim() ? 1 : 0.5 }}>
                                 <Send size={18} />
                             </button>
                         </form>
                     </>
                 ) : (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dash-text-muted)' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--dash-text-muted)', padding: '2rem', textAlign: 'center' }}>
                         Select a conversation to start messaging
                     </div>
                 )}

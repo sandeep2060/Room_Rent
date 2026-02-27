@@ -46,6 +46,7 @@ export default function ProviderEditListing() {
     const [address, setAddress] = useState('')
     const [mapPosition, setMapPosition] = useState({ lat: 27.7172, lng: 85.3240 })
     const [isActive, setIsActive] = useState(true)
+    const [images, setImages] = useState([])
 
     const [amenities, setAmenities] = useState({
         wifi: false,
@@ -81,6 +82,7 @@ export default function ProviderEditListing() {
             setGenderPref(data.gender_preference || 'all')
             setAddress(data.address || '')
             setIsActive(data.is_active)
+            setImages(data.images || [])
 
             if (data.latitude && data.longitude) {
                 setMapPosition({ lat: data.latitude, lng: data.longitude })
@@ -121,7 +123,8 @@ export default function ProviderEditListing() {
                 latitude: mapPosition.lat,
                 longitude: mapPosition.lng,
                 amenities,
-                is_active: isActive
+                is_active: isActive,
+                images: images
             }
 
             const { error: updateError } = await supabase
