@@ -32,8 +32,8 @@ function ProviderAnalytics() {
             const { data: bookingsData, error } = await supabase
                 .from('bookings')
                 .select(`
-                    id, start_date, end_date, status, total_price_nrs,
-                    rooms ( title ),
+                    id, start_date, status, total_price_nrs, stay_duration,
+                    rooms ( title, rent_category ),
                     seeker:profiles!bookings_seeker_id_fkey ( name )
                 `)
                 .eq('provider_id', profile.id)
@@ -139,7 +139,10 @@ function ProviderAnalytics() {
                                         <span>{booking.seeker?.name || 'Unknown Seeker'}</span>
                                     </td>
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem' }}>
-                                        {booking.start_date} {booking.end_date ? `to ${booking.end_date}` : '(Monthly)'}
+                                        {booking.start_date}
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--dash-text-muted)', marginTop: '0.25rem' }}>
+                                            Duration: {booking.stay_duration || 1} {booking.rooms?.rent_category === 'monthly' ? 'Months' : booking.rooms?.rent_category === 'daily' ? 'Days' : 'Hours'}
+                                        </div>
                                     </td>
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem' }}>{booking.rooms?.title}</td>
                                     <td style={{ padding: '1rem 1.5rem' }}>

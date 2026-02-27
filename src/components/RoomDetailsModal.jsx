@@ -19,6 +19,8 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
         ? room.images
         : ['https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80']
 
+    const [duration, setDuration] = useState(1)
+
     return (
         <div style={{
             position: 'fixed',
@@ -112,12 +114,12 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>Description</h3>
                             <p style={{ color: 'var(--dash-text)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{room.description || 'No description provided.'}</p>
                         </div>
 
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>Features & Amenities</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                                 {hasAmenity(room.amenities, 'wifi') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Wifi size={16} color="var(--accent)" /> Free WiFi</div>}
@@ -128,12 +130,33 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             </div>
                         </div>
 
+                        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--dash-bg)', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
+                            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Booking Duration
+                            </h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={duration}
+                                    onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
+                                    style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-surface)', color: 'var(--dash-text)', outline: 'none' }}
+                                />
+                                <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                                    {room.rent_category === 'monthly' ? 'Months' : room.rent_category === 'daily' ? 'Days' : 'Hours'}
+                                </span>
+                            </div>
+                            <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
+                                Total Price: <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Nrs {room.price_nrs * duration}</span>
+                            </p>
+                        </div>
+
                         <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--dash-border)', display: 'flex', gap: '1rem' }}>
                             <button
                                 className="btn-primary"
                                 style={{ flex: 1, padding: '1rem', fontSize: '1.1rem' }}
                                 onClick={() => {
-                                    onRequestBook(room.id);
+                                    onRequestBook(room.id, duration);
                                     onClose();
                                 }}
                             >

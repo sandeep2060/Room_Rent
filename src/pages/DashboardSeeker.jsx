@@ -12,6 +12,7 @@ import RoomDetailsModal from '../components/RoomDetailsModal'
 function SeekerOverview() {
     const { profile } = useAuth()
     const [recommendedRooms, setRecommendedRooms] = useState([])
+    const [savedRoomIds, setSavedRoomIds] = useState(new Set())
     const [loading, setLoading] = useState(true)
 
     // Search & Filter States
@@ -26,8 +27,24 @@ function SeekerOverview() {
 
     // Re-fetch rooms when filters or profile changes
     useEffect(() => {
-        if (profile) fetchRecommendations()
+        if (profile) {
+            fetchRecommendations()
+            fetchSavedRoomIds()
+        }
     }, [profile, searchTerm, categoryFilter, genderFilter, minPrice, maxPrice])
+
+    async function fetchSavedRoomIds() {
+        try {
+            const { data, error } = await supabase
+                .from('saved_rooms')
+                .select('room_id')
+                .eq('user_id', profile.id)
+            if (error) throw error
+            setSavedRoomIds(new Set(data.map(item => item.room_id)))
+        } catch (error) {
+            console.error('Error fetching saved room IDs', error)
+        }
+    }
 
     async function fetchRecommendations() {
         try {
@@ -85,8 +102,8 @@ function SeekerOverview() {
         }
     }
 
-    async function handleBookRoom(roomId) {
-        if (!window.confirm('Request to book this room?')) return;
+    async function handleBookRoom(roomId, duration) {
+        if (!window.confirm(`Request to book this room for ${duration} ${recommendedRooms.find(r => r.id === roomId)?.rent_category === 'monthly' ? 'months' : recommendedRooms.find(r => r.id === roomId)?.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
         try {
             // Check if already booked
             const { data: existing, error: checkError } = await supabase
@@ -111,7 +128,8 @@ function SeekerOverview() {
                 provider_id: room.provider_id,
                 start_date: new Date().toISOString().split('T')[0], // Today as placeholder
                 status: 'pending',
-                total_price_nrs: room.price_nrs // Passing base price, real app would calculate Based on dates
+                stay_duration: duration,
+                total_price_nrs: room.price_nrs * duration
             }])
 
             if (error) throw error
@@ -119,6 +137,32 @@ function SeekerOverview() {
         } catch (error) {
             console.error('Error booking room', error)
             alert('Failed to send booking request.')
+        }
+    }
+
+    async function toggleSaveRoom(roomId) {
+        try {
+            if (savedRoomIds.has(roomId)) {
+                const { error } = await supabase
+                    .from('saved_rooms')
+                    .delete()
+                    .eq('user_id', profile.id)
+                    .eq('room_id', roomId)
+                if (error) throw error
+                setSavedRoomIds(prev => {
+                    const next = new Set(prev)
+                    next.delete(roomId)
+                    return next
+                })
+            } else {
+                const { error } = await supabase
+                    .from('saved_rooms')
+                    .insert([{ user_id: profile.id, room_id: roomId }])
+                if (error) throw error
+                setSavedRoomIds(prev => new Set(prev).add(roomId))
+            }
+        } catch (error) {
+            console.error('Error toggling save', error)
         }
     }
 
@@ -210,8 +254,21 @@ function SeekerOverview() {
                             onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
                             onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(15,23,42,0.6)', borderRadius: '50%', padding: '0.4rem', color: 'white', zIndex: 10, backdropFilter: 'blur(4px)' }}>
-                                <Heart size={20} />
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSaveRoom(room.id);
+                                }}
+                                style={{
+                                    position: 'absolute', top: '10px', right: '10px',
+                                    background: savedRoomIds.has(room.id) ? 'var(--accent)' : 'rgba(15,23,42,0.6)',
+                                    borderRadius: '50%', padding: '0.4rem',
+                                    color: 'white', zIndex: 10, backdropFilter: 'blur(4px)',
+                                    transition: 'all 0.2s',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
+                                <Heart size={20} fill={savedRoomIds.has(room.id) ? 'white' : 'none'} />
                             </div>
                             <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80'} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
                             <div style={{ padding: '1.25rem' }}>
@@ -249,33 +306,108 @@ function SeekerOverview() {
 
 
 function SeekerSaved() {
+    const { profile } = useAuth()
+    const [savedRooms, setSavedRooms] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [selectedRoom, setSelectedRoom] = useState(null)
+
+    useEffect(() => {
+        if (profile) fetchSavedRooms()
+    }, [profile])
+
+    async function fetchSavedRooms() {
+        try {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('saved_rooms')
+                .select(`
+                    id,
+                    rooms (*)
+                `)
+                .eq('user_id', profile.id)
+
+            if (error) throw error
+            setSavedRooms(data.map(item => item.rooms) || [])
+        } catch (error) {
+            console.error('Error fetching saved rooms', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Reuse overview logic if needed or define locally
+    async function handleBookRoomLocal(roomId, duration) {
+        if (!window.confirm('Request to book this room?')) return;
+        try {
+            const room = savedRooms.find(r => r.id === roomId)
+            const { error } = await supabase.from('bookings').insert([{
+                room_id: roomId,
+                seeker_id: profile.id,
+                provider_id: room.provider_id,
+                start_date: new Date().toISOString().split('T')[0],
+                status: 'pending',
+                stay_duration: duration,
+                total_price_nrs: room.price_nrs * duration
+            }])
+            if (error) throw error
+            alert('Booking request sent!')
+        } catch (error) {
+            console.error('Error booking', error)
+            alert('Fails to book.')
+        }
+    }
+
     return (
         <div>
             <h1 className="dashboard-title">Saved Rooms</h1>
-            <p className="dashboard-subtitle">Compare and book when you are ready.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
-                {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="dashboard-card" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'white', borderRadius: '50%', padding: '0.4rem', color: 'red', zIndex: 10 }}>
-                            <Heart size={20} fill="red" />
-                        </div>
-                        <img src={`https://images.unsplash.com/photo-1520256862855-398228c41684?w=600&q=80&sig=${i}`} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
-                        <div style={{ padding: '1.25rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Lakeside Retreat</h3>
-                                <span style={{ color: '#ffc107', fontSize: '0.9rem' }}>★ 4.8</span>
+            <p className="dashboard-subtitle">Your curated list of properties.</p>
+
+            {loading ? (
+                <p>Loading saved rooms...</p>
+            ) : savedRooms.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--dash-surface)', borderRadius: '12px', marginTop: '2rem' }}>
+                    <Heart size={48} color="var(--dash-text-muted)" style={{ margin: '0 auto 1rem' }} />
+                    <h3 style={{ margin: '0 0 0.5rem' }}>No saved rooms</h3>
+                    <p style={{ color: 'var(--dash-text-muted)' }}>Tap the heart on any room to save it for later.</p>
+                </div>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+                    {savedRooms.map(room => (
+                        <div
+                            key={room.id}
+                            className="dashboard-card"
+                            style={{ padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}
+                            onClick={() => setSelectedRoom(room)}
+                        >
+                            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1520256862855-398228c41684?w=600&q=80'} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                            <div style={{ padding: '1.25rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{room.title}</h3>
+                                </div>
+                                <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <MapPin size={14} /> {room.address}
+                                </p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <p style={{ color: 'var(--accent)', fontWeight: 'bold', margin: 0, fontSize: '1.1rem' }}>
+                                        Nrs {room.price_nrs}
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)', fontWeight: 'normal' }}>
+                                            /{room.rent_category === 'monthly' ? 'month' : room.rent_category === 'daily' ? 'day' : 'night'}
+                                        </span>
+                                    </p>
+                                </div>
                             </div>
-                            <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                <MapPin size={14} /> Pokhara, Kaski
-                            </p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <p style={{ color: 'var(--accent)', fontWeight: 'bold', margin: 0, fontSize: '1.1rem' }}>Nrs 3,200 <span style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)', fontWeight: 'normal' }}>/night</span></p>
-                                <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Book</button>
-                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
+
+            {selectedRoom && (
+                <RoomDetailsModal
+                    room={selectedRoom}
+                    onClose={() => setSelectedRoom(null)}
+                    onRequestBook={handleBookRoomLocal}
+                />
+            )}
         </div>
     )
 }
