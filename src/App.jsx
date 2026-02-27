@@ -12,33 +12,31 @@ import './App.css'
 export default function App() {
   return (
     <div className="app">
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          
-          <Route 
-            path="/dashboard-seeker" 
-            element={
-              <ProtectedRoute allowedRole="seeker">
-                <DashboardSeeker />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/dashboard-provider" 
-            element={
-              <ProtectedRoute allowedRole="provider">
-                <DashboardProvider />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </main>
-      <Footer />
+      <Routes>
+        <Route path="/" element={<><Navbar /><main><Home /></main><Footer /></>} />
+        <Route path="/login" element={<><Navbar /><main><Login /></main><Footer /></>} />
+        <Route path="/signup" element={<><Navbar /><main><Signup /></main><Footer /></>} />
+
+        {/* Seeker Dashboard Routes */}
+        <Route
+          path="/dashboard-seeker/*"
+          element={
+            <ProtectedRoute allowedRole="seeker">
+              <DashboardSeeker />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Provider Dashboard Routes */}
+        <Route
+          path="/dashboard-provider/*"
+          element={
+            <ProtectedRoute allowedRole="provider">
+              <DashboardProvider />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </div>
   )
 }

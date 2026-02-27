@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -21,4 +23,61 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Base Theme (Provider / Default) */
+:root {
+  --bg-solid: #050816;
+  --bg-card: #111827;
+  --surface: #0b1020;
+  --accent: #00f5a0;
+  --accent2: #ff6bcb;
+  --accent3: #ffd166;
+  --accent-dim: rgba(0, 245, 160, 0.15);
+  --text: #f9fafb;
+  --text-muted: #9ca3af;
+  --border: rgba(148, 163, 184, 0.35);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 24px 80px rgba(15, 23, 42, 0.9);
+  --font: 'DM Sans', system-ui, sans-serif;
+  
+  --dash-bg: #050816;
+  --dash-surface: #111827;
+  --dash-border: rgba(148, 163, 184, 0.35);
+  --dash-text: #f9fafb;
+  --dash-text-muted: #9ca3af;
+  
+  /* Sidebar/Nav */
+  --sidebar-bg: rgba(15, 23, 42, 0.95);
+  --sidebar-width: 250px;
+  --sidebar-border: rgba(148, 163, 184, 0.2);
+}
+
+/* Seeker Theme Overrides */
+.theme-seeker {
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent-dim: rgba(56, 189, 248, 0.15);
+  
+  --dash-bg: #0f172a;
+  --dash-surface: #1e293b;
+  --dash-border: rgba(56, 189, 248, 0.2);
+  
+  --sidebar-bg: rgba(30, 41, 59, 0.95);
+  --sidebar-border: rgba(56, 189, 248, 0.15);
+}
+
+/* Provider Theme Overrides */
+.theme-provider {
+  --accent: #f97316;
+  --accent2: #ec4899;
+  --accent-dim: rgba(249, 115, 22, 0.15);
+  
+  --dash-bg: #1c1917;
+  --dash-surface: #292524;
+  --dash-border: rgba(249, 115, 22, 0.2);
+  
+  --sidebar-bg: rgba(41, 37, 36, 0.95);
+  --sidebar-border: rgba(249, 115, 22, 0.15);
 }
