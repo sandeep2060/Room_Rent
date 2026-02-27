@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 export default function Login() {
     const [searchParams] = useSearchParams()
@@ -13,6 +14,7 @@ export default function Login() {
     const [role, setRole] = useState(initialRole)
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [feedback, setFeedback] = useState(null) // { type, message }
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
@@ -42,13 +44,17 @@ export default function Login() {
             }
 
             // Success
-            if (role === 'provider') {
-                navigate('/dashboard-provider')
-            } else {
-                navigate('/dashboard-seeker')
-            }
+            setFeedback({ type: 'success', message: 'Successfully Logged In!' })
+
+            setTimeout(() => {
+                if (role === 'provider') {
+                    navigate('/dashboard-provider')
+                } else {
+                    navigate('/dashboard-seeker')
+                }
+            }, 1500)
         } catch (err) {
-            setError(err.message)
+            setFeedback({ type: 'error', message: err.message })
         } finally {
             setLoading(false)
         }
@@ -115,6 +121,13 @@ export default function Login() {
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
             </form>
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
+            )}
         </AuthLayout>
     )
 }

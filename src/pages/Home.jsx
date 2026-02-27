@@ -1,35 +1,8 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-
-const featuredListings = [
-    {
-        id: 1,
-        title: 'Colorful Room in Thamel',
-        location: 'Thamel, Kathmandu',
-        priceNpr: 2500,
-        rating: 4.9,
-        image:
-            'https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800&q=80',
-    },
-    {
-        id: 2,
-        title: 'Lakeside Homestay',
-        location: 'Lakeside, Pokhara',
-        priceNpr: 3200,
-        rating: 4.8,
-        image:
-            'https://images.unsplash.com/photo-1520256862855-398228c41684?w=800&q=80',
-    },
-    {
-        id: 3,
-        title: 'Mountain View Room',
-        location: 'Nagarkot, Bhaktapur',
-        priceNpr: 2800,
-        rating: 5,
-        image:
-            'https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80',
-    },
-]
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { MapPin, Search, Calendar, Users, Heart } from 'lucide-react'
 
 const steps = [
     {
@@ -63,11 +36,54 @@ const testimonials = [
 ]
 
 export default function Home() {
+    const { profile } = useAuth()
     const [location, setLocation] = useState('')
     const [checkIn, setCheckIn] = useState('')
     const [checkOut, setCheckOut] = useState('')
     const [guests, setGuests] = useState('1')
+    const [rooms, setRooms] = useState([])
+    const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
+
+    useEffect(() => {
+        fetchFeaturedRooms()
+    }, [profile])
+
+    async function fetchFeaturedRooms() {
+        try {
+            setLoading(true)
+
+            // 1. Try to fetch rooms from user's district if logged in
+            let nearbyData = []
+            if (profile?.district) {
+                const { data } = await supabase
+                    .from('rooms')
+                    .select('*')
+                    .ilike('address', `%${profile.district}%`)
+                    .limit(3)
+                nearbyData = data || []
+            }
+
+            // 2. Fetch general latest rooms
+            const { data: generalData, error } = await supabase
+                .from('rooms')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(6)
+
+            if (error) throw error
+
+            // Combine and remove duplicates
+            const combined = [...nearbyData, ...(generalData || [])]
+            const unique = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)
+
+            setRooms(unique.slice(0, 6))
+        } catch (err) {
+            console.error('Error fetching home rooms:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <>
@@ -146,20 +162,22 @@ export default function Home() {
                             <button className="btn-search">Search rooms in Nepal</button>
                         </div>
                     </div>
-                    <div className="hero-actions">
+                    <div className="hero-actions" style={{ gap: '1.5rem', width: '100%', maxWidth: '500px', margin: '1.5rem auto 0' }}>
                         <button
                             type="button"
-                            className="btn-secondary"
+                            className="btn-primary"
+                            style={{ flex: 1, padding: '1.1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                             onClick={() => navigate('/signup?role=seeker')}
                         >
-                            I need a room
+                            <Search size={18} /> I need a room
                         </button>
                         <button
                             type="button"
-                            className="btn-outline hero-outline"
+                            className="btn-secondary"
+                            style={{ flex: 1, padding: '1.1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                             onClick={() => navigate('/signup?role=provider')}
                         >
-                            I provide rooms
+                            <Calendar size={18} /> I provide rooms
                         </button>
                     </div>
                 </div>
@@ -183,31 +201,43 @@ export default function Home() {
             </section>
 
             <section className="section listings" id="listings">
-                <h2 className="section-title">Featured rooms in Nepal</h2>
+                <h2 className="section-title">
+                    {profile?.district ? `Rooms near ${profile.district}` : 'Featured rooms in Nepal'}
+                </h2>
                 <div className="listings-grid">
-                    {featuredListings.map((listing, i) => (
-                        <article
-                            key={listing.id}
-                            className="listing-card"
-                            style={{ animationDelay: `${i * 0.1}s` }}
-                        >
-                            <div className="listing-image-wrap">
-                                <img src={listing.image} alt={listing.title} />
-                                <span className="listing-price">
-                                    Nrs {listing.priceNpr.toLocaleString()}
-                                    <small>/night</small>
-                                </span>
-                                <span className="listing-rating">★ {listing.rating}</span>
-                            </div>
-                            <div className="listing-body">
-                                <h3>{listing.title}</h3>
-                                <p className="listing-location">{listing.location}</p>
-                                <button type="button" className="listing-link">
-                                    View details →
-                                </button>
-                            </div>
-                        </article>
-                    ))}
+                    {loading ? (
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)' }}>Fetching latest rooms in Nepal...</p>
+                    ) : rooms.length === 0 ? (
+                        <p style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)' }}>No rooms posted yet. Be the first!</p>
+                    ) : (
+                        rooms.map((listing, i) => (
+                            <article
+                                key={listing.id}
+                                className="listing-card"
+                                style={{ animationDelay: `${i * 0.1}s`, cursor: 'pointer' }}
+                                onClick={() => navigate('/login')}
+                            >
+                                <div className="listing-image-wrap">
+                                    <img src={listing.images?.[0] || 'https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80'} alt={listing.title} />
+                                    <span className="listing-price">
+                                        Nrs {listing.price_nrs.toLocaleString()}
+                                        <small>/{listing.rent_category === 'monthly' ? 'month' : listing.rent_category === 'daily' ? 'day' : 'night'}</small>
+                                    </span>
+                                </div>
+                                <div className="listing-body">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>{listing.title}</h3>
+                                    </div>
+                                    <p className="listing-location" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <MapPin size={14} /> {listing.address}
+                                    </p>
+                                    <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {listing.people_capacity} Capacity</span>
+                                    </div>
+                                </div>
+                            </article>
+                        ))
+                    )}
                 </div>
                 <button type="button" className="btn-outline">
                     View all Nepal listings

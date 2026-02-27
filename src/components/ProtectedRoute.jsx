@@ -6,8 +6,10 @@ export default function ProtectedRoute({ children, allowedRole }) {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-main)' }}>
-                Loading...
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-solid)', color: 'var(--text)' }}>
+                <div style={{ width: '40px', height: '40px', border: '3px solid var(--accent-dim)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ fontWeight: '500', letterSpacing: '0.5px' }}>Loading Nest...</p>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         )
     }
@@ -20,8 +22,10 @@ export default function ProtectedRoute({ children, allowedRole }) {
     // Logged in but profile not yet loaded -> wait
     if (!profile) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-main)' }}>
-                Loading Profile...
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-solid)', color: 'var(--text)' }}>
+                <div style={{ width: '40px', height: '40px', border: '3px solid var(--accent-dim)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ fontWeight: '500', letterSpacing: '0.5px' }}>Verifying Profile...</p>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         )
     }

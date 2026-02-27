@@ -4,6 +4,7 @@ import { adToBs, bsToAd } from '@sbmdkl/nepali-date-converter'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 const districts = [
     'Bhojpur', 'Dhankuta', 'Ilam', 'Jhapa', 'Khotang', 'Morang', 'Okhaldhunga', 'Panchthar', 'Sankhuwasabha', 'Solukhumbu', 'Sunsari', 'Taplejung', 'Terhathum', 'Udayapur',
@@ -57,6 +58,7 @@ export default function Signup() {
 
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [feedback, setFeedback] = useState(null)
 
     // Redirect if already logged in
     if (session) {
@@ -114,7 +116,7 @@ export default function Signup() {
         setError(null)
 
         if (form.password !== form.confirmPassword) {
-            setError('Passwords do not match.')
+            setFeedback({ type: 'warning', message: 'Passwords do not match!' })
             return
         }
 
@@ -141,10 +143,12 @@ export default function Signup() {
 
             if (signUpError) throw signUpError
 
-            alert('Signup successful! Check your email to confirm (or just login if email confirmation is disabled).')
-            navigate('/login')
+            setFeedback({ type: 'success', message: 'Account Created Successfully!' })
+            setTimeout(() => {
+                navigate('/login')
+            }, 2000)
         } catch (err) {
-            setError(err.message)
+            setFeedback({ type: 'error', message: err.message })
         } finally {
             setLoading(false)
         }
@@ -284,6 +288,13 @@ export default function Signup() {
                     {loading ? 'Submitting...' : 'Create account'}
                 </button>
             </form>
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
+            )}
         </AuthLayout>
     )
 }

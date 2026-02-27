@@ -1,19 +1,20 @@
-import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useNavigate, Routes, Route } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
-import { MapPin, Calendar, CreditCard, Camera, Heart } from 'lucide-react'
-import { Filter, Search } from 'lucide-react'
+import { Search, MapPin, Heart, Calendar, MessageSquare, User, Settings, LogOut, Check, X, Filter } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
 import RoomDetailsModal from '../components/RoomDetailsModal'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 function SeekerOverview() {
     const { profile } = useAuth()
     const [recommendedRooms, setRecommendedRooms] = useState([])
     const [savedRoomIds, setSavedRoomIds] = useState(new Set())
     const [loading, setLoading] = useState(true)
+    const [feedback, setFeedback] = useState(null)
 
     // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('')
@@ -115,7 +116,7 @@ function SeekerOverview() {
                 .single()
 
             if (existing) {
-                alert('You already have an active booking request for this room!')
+                setFeedback({ type: 'warning', message: 'Active request already exists!' })
                 return
             }
 
@@ -133,10 +134,10 @@ function SeekerOverview() {
             }])
 
             if (error) throw error
-            alert('Booking request sent successfully!')
+            setFeedback({ type: 'success', message: 'Room Booked Successfully!' })
         } catch (error) {
             console.error('Error booking room', error)
-            alert('Failed to send booking request.')
+            setFeedback({ type: 'error', message: 'Booking Failed.' })
         }
     }
 
@@ -176,11 +177,11 @@ function SeekerOverview() {
                 .eq('status', 'pending') // Double check status
 
             if (error) throw error
-            alert('Booking request cancelled.')
+            setFeedback({ type: 'success', message: 'Request Cancelled' })
             fetchRecommendations() // Refresh if needed, though usually bookings are in separate tab
         } catch (error) {
             console.error('Error cancelling booking', error)
-            alert('Failed to cancel booking.')
+            setFeedback({ type: 'error', message: 'Cancellation Failed' })
         }
     }
 
@@ -298,6 +299,14 @@ function SeekerOverview() {
                     room={selectedRoom}
                     onClose={() => setSelectedRoom(null)}
                     onRequestBook={handleBookRoom}
+                />
+            )}
+
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
                 />
             )}
         </div>

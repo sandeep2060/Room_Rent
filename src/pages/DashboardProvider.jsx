@@ -1,19 +1,22 @@
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import DashboardLayout from '../components/DashboardLayout'
 import { TrendingUp, Users, Home, Calendar as CalendarIcon, Edit3, Trash2, Mail, CheckCircle, XCircle } from 'lucide-react'
 import ProviderAddListing from './ProviderAddListing'
 import ProviderEditListing from './ProviderEditListing'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import DashboardLayout from '../components/DashboardLayout'
+import RoomDetailsModal from '../components/RoomDetailsModal'
 import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 function ProviderAnalytics() {
     const { profile } = useAuth()
     const [bookings, setBookings] = useState([])
-    const [stats, setStats] = useState({ earned: 0, guests: 0, activeRooms: 0 })
+    const [stats, setStats] = useState({ requests: 0, guests: 0, activeRooms: 0 })
     const [loading, setLoading] = useState(true)
+    const [feedback, setFeedback] = useState(null)
 
     useEffect(() => {
         if (profile?.id) fetchDashboardData()
@@ -49,7 +52,7 @@ function ProviderAnalytics() {
             const earned = accepted.reduce((sum, b) => sum + (b.total_price_nrs || 0), 0)
             const guests = new Set(accepted.map(b => b.seeker?.name)).size
 
-            setStats({ earned, guests, activeRooms: activeRooms || 0 })
+            setStats({ requests: validBookings.length, guests, activeRooms: activeRooms || 0 })
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
         } finally {
@@ -70,8 +73,10 @@ function ProviderAnalytics() {
             setBookings(bookings.map(b =>
                 b.id === bookingId ? { ...b, status: newStatus } : b
             ))
+            setFeedback({ type: 'success', message: `Booking ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}` })
         } catch (error) {
             console.error(`Error marking booking as ${newStatus}:`, error)
+            setFeedback({ type: 'error', message: 'Failed to update booking status.' })
         }
     }
 
@@ -86,8 +91,8 @@ function ProviderAnalytics() {
                         <TrendingUp size={32} />
                     </div>
                     <div>
-                        <p style={{ margin: 0, color: 'var(--dash-text-muted)', fontSize: '0.9rem' }}>Nrs Earned (Total)</p>
-                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{stats.earned.toLocaleString()}</h2>
+                        <p style={{ margin: 0, color: 'var(--dash-text-muted)', fontSize: '0.9rem' }}>Total Requests</p>
+                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>{stats.requests}</h2>
                     </div>
                 </div>
 
@@ -172,6 +177,13 @@ function ProviderAnalytics() {
                     </tbody>
                 </table>
             </div>
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
+            )}
         </div>
     )
 }
@@ -181,6 +193,7 @@ function ProviderListings() {
     const { profile } = useAuth()
     const [listings, setListings] = useState([])
     const [loading, setLoading] = useState(true)
+    const [feedback, setFeedback] = useState(null)
 
     useEffect(() => {
         if (profile?.id) fetchListings()
@@ -209,9 +222,10 @@ function ProviderListings() {
             const { error } = await supabase.from('rooms').delete().eq('id', roomId)
             if (error) throw error
             setListings(listings.filter(l => l.id !== roomId))
+            setFeedback({ type: 'success', message: 'Listing deleted successfully!' })
         } catch (error) {
             console.error('Error deleting listing:', error)
-            alert('Failed to delete listing.')
+            setFeedback({ type: 'error', message: 'Failed to delete listing.' })
         }
     }
 
@@ -264,6 +278,14 @@ function ProviderListings() {
                         </div>
                     ))}
                 </div>
+            )}
+
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
             )}
         </div>
     )
