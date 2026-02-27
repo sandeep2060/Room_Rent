@@ -1,0 +1,288 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+
+const featuredListings = [
+    {
+        id: 1,
+        title: 'Colorful Room in Thamel',
+        location: 'Thamel, Kathmandu',
+        priceNpr: 2500,
+        rating: 4.9,
+        image:
+            'https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800&q=80',
+    },
+    {
+        id: 2,
+        title: 'Lakeside Homestay',
+        location: 'Lakeside, Pokhara',
+        priceNpr: 3200,
+        rating: 4.8,
+        image:
+            'https://images.unsplash.com/photo-1520256862855-398228c41684?w=800&q=80',
+    },
+    {
+        id: 3,
+        title: 'Mountain View Room',
+        location: 'Nagarkot, Bhaktapur',
+        priceNpr: 2800,
+        rating: 5,
+        image:
+            'https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80',
+    },
+]
+
+const steps = [
+    {
+        icon: '🔍',
+        title: 'Search Nepal',
+        desc: 'Filter rooms by city, district and budget across Nepal.',
+    },
+    {
+        icon: '📅',
+        title: 'Book Online',
+        desc: 'Reserve instantly or send a request to local hosts.',
+    },
+    {
+        icon: '🏔️',
+        title: 'Stay & Explore',
+        desc: 'Experience local Nepali culture and hospitality.',
+    },
+]
+
+const testimonials = [
+    {
+        text: 'Found a cozy room near Pashupatinath in minutes. Perfect for my Kathmandu visit!',
+        author: 'Prakash S.',
+        role: 'Traveler from Pokhara',
+    },
+    {
+        text: 'I listed my extra room in Lalitpur and started getting bookings from all over Nepal.',
+        author: 'Sangita D.',
+        role: 'Host in Lalitpur',
+    },
+]
+
+export default function Home() {
+    const [location, setLocation] = useState('')
+    const [checkIn, setCheckIn] = useState('')
+    const [checkOut, setCheckOut] = useState('')
+    const [guests, setGuests] = useState('1')
+    const navigate = useNavigate()
+
+    return (
+        <>
+            <section className="hero">
+                <div className="hero-3d-bg">
+                    <div className="cube-wrap">
+                        <div className="cube">
+                            <div className="face front"></div>
+                            <div className="face back"></div>
+                            <div className="face right"></div>
+                            <div className="face left"></div>
+                            <div className="face top"></div>
+                            <div className="face bottom"></div>
+                        </div>
+                    </div>
+                    <div className="floating-shapes">
+                        <div className="shape s1"></div>
+                        <div className="shape s2"></div>
+                        <div className="shape s3"></div>
+                        <div className="shape s4"></div>
+                        <div className="shape s5"></div>
+                    </div>
+                </div>
+                <div className="hero-content">
+                    <p className="hero-pill">
+                        Night mode · Nepal focused · 3D look
+                    </p>
+                    <h1 className="hero-title">
+                        <span className="line">Find Your <i style={{ color: 'var(--accent)' }}>Nest</i></span>
+                        <span className="line accent">across Nepal</span>
+                    </h1>
+                    <p className="hero-sub">
+                        From Kathmandu to Pokhara, discover homestays, city rooms and
+                        mountain view stays with transparent prices in Nrs.
+                    </p>
+                    <div className="search-card">
+                        <div className="search-row">
+                            <div className="search-field">
+                                <label>District or city</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Kathmandu, Pokhara, Chitwan"
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                />
+                            </div>
+                            <div className="search-field">
+                                <label>Check-in</label>
+                                <input
+                                    type="date"
+                                    value={checkIn}
+                                    onChange={(e) => setCheckIn(e.target.value)}
+                                />
+                            </div>
+                            <div className="search-field">
+                                <label>Check-out</label>
+                                <input
+                                    type="date"
+                                    value={checkOut}
+                                    onChange={(e) => setCheckOut(e.target.value)}
+                                />
+                            </div>
+                            <div className="search-field">
+                                <label>Guests</label>
+                                <select
+                                    value={guests}
+                                    onChange={(e) => setGuests(e.target.value)}
+                                >
+                                    {[1, 2, 3, 4, 5, 6].map((n) => (
+                                        <option key={n} value={n}>
+                                            {n} {n === 1 ? 'guest' : 'guests'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button className="btn-search">Search rooms in Nepal</button>
+                        </div>
+                    </div>
+                    <div className="hero-actions">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => navigate('/signup?role=seeker')}
+                        >
+                            I need a room
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-outline hero-outline"
+                            onClick={() => navigate('/signup?role=provider')}
+                        >
+                            I provide rooms
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section how-it-works" id="how-it-works">
+                <h2 className="section-title">How it works in Nepal</h2>
+                <div className="steps-grid">
+                    {steps.map((step, i) => (
+                        <div
+                            key={step.title}
+                            className="step-card"
+                            style={{ animationDelay: `${i * 0.15}s` }}
+                        >
+                            <div className="step-icon">{step.icon}</div>
+                            <h3>{step.title}</h3>
+                            <p>{step.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="section listings" id="listings">
+                <h2 className="section-title">Featured rooms in Nepal</h2>
+                <div className="listings-grid">
+                    {featuredListings.map((listing, i) => (
+                        <article
+                            key={listing.id}
+                            className="listing-card"
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                        >
+                            <div className="listing-image-wrap">
+                                <img src={listing.image} alt={listing.title} />
+                                <span className="listing-price">
+                                    Nrs {listing.priceNpr.toLocaleString()}
+                                    <small>/night</small>
+                                </span>
+                                <span className="listing-rating">★ {listing.rating}</span>
+                            </div>
+                            <div className="listing-body">
+                                <h3>{listing.title}</h3>
+                                <p className="listing-location">{listing.location}</p>
+                                <button type="button" className="listing-link">
+                                    View details →
+                                </button>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+                <button type="button" className="btn-outline">
+                    View all Nepal listings
+                </button>
+            </section>
+
+            <section className="section why-us">
+                <h2 className="section-title">Why choose RoomRent Nepal</h2>
+                <div className="benefits-grid">
+                    <div className="benefit">
+                        <div className="benefit-icon">✓</div>
+                        <h3>Local verified hosts</h3>
+                        <p>
+                            Each room provider from different districts of Nepal is
+                            checked for quality and safety.
+                        </p>
+                    </div>
+                    <div className="benefit">
+                        <div className="benefit-icon">💳</div>
+                        <h3>Secure Nrs payments</h3>
+                        <p>
+                            Pay in Nepali Rupees with trusted partners and protect your
+                            money until check-in.
+                        </p>
+                    </div>
+                    <div className="benefit">
+                        <div className="benefit-icon">🏔️</div>
+                        <h3>Designed for Nepal travel</h3>
+                        <p>
+                            Filter by district, rural municipality and ward to find
+                            rooms near temples, trekking routes and cities.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="section testimonials" id="testimonials">
+                <h2 className="section-title">What people say</h2>
+                <div className="testimonials-grid">
+                    {testimonials.map((t, i) => (
+                        <blockquote key={i} className="testimonial-card">
+                            <p>"{t.text}"</p>
+                            <footer>
+                                <strong>{t.author}</strong> — {t.role}
+                            </footer>
+                        </blockquote>
+                    ))}
+                </div>
+            </section>
+
+            <section className="cta">
+                <div className="cta-inner">
+                    <h2>Start your next stay in Nepal</h2>
+                    <p>
+                        Sign up as a traveller looking for rooms or a host ready to
+                        welcome guests.
+                    </p>
+                    <div className="cta-buttons">
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => navigate('/signup?role=seeker')}
+                        >
+                            I need a room
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => navigate('/signup?role=provider')}
+                        >
+                            I provide rooms
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </>
+    )
+}
