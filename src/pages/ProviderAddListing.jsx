@@ -163,7 +163,7 @@ export default function ProviderAddListing() {
                                     for (const file of e.target.files) {
                                         const fileExt = file.name.split('.').pop();
                                         const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
-                                        const filePath = `rooms/${fileName}`;
+                                        const filePath = `${fileName}`;
 
                                         const { error: uploadError } = await supabase.storage
                                             .from('room-images')
@@ -180,7 +180,8 @@ export default function ProviderAddListing() {
                                     setImages(uploadedUrls);
                                 } catch (err) {
                                     console.error('Upload error:', err);
-                                    setError('Failed to upload images.');
+                                    setError(`Upload failed: ${err.message || 'Unknown error'}`);
+                                    alert(`Upload failed: ${err.message || 'Unknown error'}`);
                                 } finally {
                                     setLoading(false);
                                 }
