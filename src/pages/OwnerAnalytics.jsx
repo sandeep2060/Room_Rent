@@ -206,7 +206,7 @@ export default function OwnerAnalytics() {
                         </div>
                         <div className="summary-box" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>Selected Range</p>
-                            <h2 style={{ margin: '0.5rem 0 0', color: '#34d399' }}>Nrs {monthlyTotal.toLocaleString()}</h2>
+                            <h2 style={{ margin: '0.5rem 0 0', color: '#34d399' }}>Nrs {rangeTotal.toLocaleString()}</h2>
                         </div>
                     </div>
                 </div>

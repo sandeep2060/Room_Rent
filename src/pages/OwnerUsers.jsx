@@ -23,7 +23,7 @@ export default function OwnerUsers() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, name, email, phone, role, district, municipality, gender, created_at, is_account_active, penalty_amount, total_paid_amount, address, ward')
+                .select('id, name, avatar_url, phone, role, district, municipality, gender, created_at, is_account_active, wallet_balance, penalty_amount, total_paid_amount, address, ward')
 
             if (error) throw error
             setUsers(data || [])
@@ -37,7 +37,6 @@ export default function OwnerUsers() {
     const filteredUsers = users
         .filter(u => {
             const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) ||
-                u.email?.toLowerCase().includes(search.toLowerCase()) ||
                 u.phone?.includes(search)
             const matchesDistrict = !filterDistrict || u.district === filterDistrict
             const matchesGender = !filterGender || u.gender === filterGender
@@ -90,7 +89,7 @@ export default function OwnerUsers() {
                         <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--dash-text-muted)' }} size={16} />
                         <input
                             type="text"
-                            placeholder="Name, Email or Phone..."
+                            placeholder="Name or Phone..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             style={{ paddingLeft: '2.5rem', width: '100%', fontSize: '0.9rem' }}
@@ -142,7 +141,7 @@ export default function OwnerUsers() {
                                             </div>
                                             <div>
                                                 <p style={{ margin: 0, fontWeight: 'bold' }}>{u.name}</p>
-                                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>{u.email}</p>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>{u.phone || 'No phone'}</p>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
                                                     <MapPin size={12} />
                                                     <span>{u.address || `${u.municipality}, ${u.district}`}</span>
