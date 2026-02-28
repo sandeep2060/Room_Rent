@@ -148,7 +148,7 @@ export default function ProviderAddListing() {
                     </div>
 
                     <div className="field">
-                        <label>Room Photos</label>
+                        <label>Room Photos (Max 4) *</label>
                         <input
                             type="file"
                             multiple
@@ -157,10 +157,15 @@ export default function ProviderAddListing() {
                             id="room-photos-upload"
                             onChange={async (e) => {
                                 if (!e.target.files) return;
+                                const newFiles = Array.from(e.target.files);
+                                if (images.length + newFiles.length > 4) {
+                                    alert('You can only upload a maximum of 4 images.');
+                                    return;
+                                }
                                 try {
                                     setLoading(true);
                                     const uploadedUrls = [...images];
-                                    for (const file of e.target.files) {
+                                    for (const file of newFiles) {
                                         const fileExt = file.name.split('.').pop();
                                         const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
                                         const filePath = `${fileName}`;

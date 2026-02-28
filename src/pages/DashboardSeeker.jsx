@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
 import RoomDetailsModal from '../components/RoomDetailsModal'
+import RoomImageCarousel from '../components/RoomImageCarousel'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
 
@@ -27,6 +28,20 @@ function SeekerOverview() {
     // Selected room for popup details
     const [selectedRoom, setSelectedRoom] = useState(null)
 
+    // Debounced values to prevent blinking
+    const [debouncedSearch, setDebouncedSearch] = useState(searchTerm)
+    const [debouncedMin, setDebouncedMin] = useState(minPrice)
+    const [debouncedMax, setDebouncedMax] = useState(maxPrice)
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm)
+            setDebouncedMin(minPrice)
+            setDebouncedMax(maxPrice)
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [searchTerm, minPrice, maxPrice])
+
     // Re-fetch rooms when filters or profile changes
     useEffect(() => {
         if (profile) {
@@ -39,7 +54,7 @@ function SeekerOverview() {
                 setSearchTerm(incomingSearch)
             }
         }
-    }, [profile, categoryFilter, genderFilter, minPrice, maxPrice])
+    }, [profile, categoryFilter, genderFilter, debouncedSearch, debouncedMin, debouncedMax])
 
     async function fetchSavedRoomIds() {
         try {
@@ -64,11 +79,11 @@ function SeekerOverview() {
                 .order('created_at', { ascending: false })
 
             // 1. Text Search (Location or Title)
-            if (searchTerm) {
+            if (debouncedSearch) {
                 // Supabase doesn't easily do OR ilike without or(), 
                 // Using address as primary text search for location
-                query = query.ilike('address', `%${searchTerm}%`)
-            } else if (profile?.location && !searchTerm) {
+                query = query.ilike('address', `%${debouncedSearch}%`)
+            } else if (profile?.location && !debouncedSearch) {
                 // Fallback to profile preferred location if no strict search is active
                 query = query.ilike('address', `%${profile.location}%`)
             }
@@ -90,11 +105,11 @@ function SeekerOverview() {
             }
 
             // 4. Price Filter
-            if (minPrice && !isNaN(minPrice)) {
-                query = query.gte('price_nrs', parseInt(minPrice))
+            if (debouncedMin && !isNaN(debouncedMin)) {
+                query = query.gte('price_nrs', parseInt(debouncedMin))
             }
-            if (maxPrice && !isNaN(maxPrice)) {
-                query = query.lte('price_nrs', parseInt(maxPrice))
+            if (debouncedMax && !isNaN(debouncedMax)) {
+                query = query.lte('price_nrs', parseInt(debouncedMax))
             }
 
             const { data, error } = await query
@@ -201,14 +216,19 @@ function SeekerOverview() {
             <div className="dashboard-card" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--dash-surface)' }}>
 
                 {/* Search Bar */}
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--dash-bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
-                    <Search size={20} color="var(--dash-text-muted)" />
+                <div style={{ position: 'relative' }}>
+                    <Search
+                        size={20}
+                        color="var(--dash-text-muted)"
+                        style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 1 }}
+                    />
                     <input
                         type="text"
+                        className="custom-input"
                         placeholder="Search by location (e.g. Kathmandu, Patan)..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', flex: 1, padding: '0.5rem', color: 'var(--dash-text)', outline: 'none' }}
+                        style={{ width: '100%', paddingLeft: '3rem' }}
                     />
                 </div>
 
@@ -219,14 +239,14 @@ function SeekerOverview() {
                         <span style={{ fontSize: '0.9rem', color: 'var(--dash-text-muted)', fontWeight: 'bold' }}>Filters:</span>
                     </div>
 
-                    <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }}>
+                    <select className="custom-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                         <option value="all">All Room Types</option>
                         <option value="monthly">Monthly Rent</option>
                         <option value="daily">Daily Rent</option>
                         <option value="nightly">Nightly Stay</option>
                     </select>
 
-                    <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }}>
+                    <select className="custom-select" value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
                         <option value="all">All Genders Acceptable</option>
                         <option value="boy">Boys Only</option>
                         <option value="girl">Girls Only</option>
@@ -234,9 +254,9 @@ function SeekerOverview() {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>Price Nrs:</span>
-                        <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }} />
+                        <input className="custom-input" type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} style={{ width: '100px' }} />
                         <span>-</span>
-                        <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-bg)', color: 'var(--dash-text)', fontSize: '0.85rem' }} />
+                        <input className="custom-input" type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '100px' }} />
                     </div>
                 </div>
             </div>
@@ -280,13 +300,13 @@ function SeekerOverview() {
                             >
                                 <Heart size={20} fill={savedRoomIds.has(room.id) ? 'white' : 'none'} />
                             </div>
-                            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80'} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                            <RoomImageCarousel images={room.images} alt={room.title} height="180px" />
                             <div style={{ padding: '1.25rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <h3 style={{ fontSize: '1.1rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.title}</h3>
                                 </div>
                                 <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    <MapPin size={14} flexShrink={0} /> {room.address}
+                                    <MapPin size={14} flexShrink={0} /> Area in {room.address.split(',').pop().trim()}
                                 </p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <p style={{ color: 'var(--accent)', fontWeight: 'bold', margin: 0, fontSize: '1.1rem' }}>
@@ -399,13 +419,13 @@ function SeekerSaved() {
                             style={{ padding: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}
                             onClick={() => setSelectedRoom(room)}
                         >
-                            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1520256862855-398228c41684?w=600&q=80'} alt="Room" style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                            <RoomImageCarousel images={room.images} alt={room.title} height="180px" />
                             <div style={{ padding: '1.25rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{room.title}</h3>
                                 </div>
                                 <p style={{ color: 'var(--dash-text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                    <MapPin size={14} /> {room.address}
+                                    <MapPin size={14} /> Area in {room.address.split(',').pop().trim()}
                                 </p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <p style={{ color: 'var(--accent)', fontWeight: 'bold', margin: 0, fontSize: '1.1rem' }}>
