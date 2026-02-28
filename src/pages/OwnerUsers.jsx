@@ -23,7 +23,7 @@ export default function OwnerUsers() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('id, name, email, phone, role, district, municipality, gender, created_at, is_account_active, penalty_amount, total_paid_amount, address, ward')
 
             if (error) throw error
             setUsers(data || [])

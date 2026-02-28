@@ -107,9 +107,13 @@ export default function AdminLogin() {
                     </div>
                 </div>
 
-                <button type="submit" className="btn-primary auth-submit" disabled={loading} style={{ background: '#60bb46' }}>
-                    {loading ? 'Authenticating...' : 'Secure Login'}
+                <button type="submit" className="btn-primary auth-submit" disabled={loading} style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}>
+                    {loading ? 'Authenticating...' : 'Enter Admin Control'}
                 </button>
+
+                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                    <Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Back to Public Site</Link>
+                </div>
             </form>
 
             {loading && <HouseLoader message="Verifying administrative keys..." />}

@@ -41,7 +41,7 @@ function SeekerOverview() {
             setDebouncedSearch(searchTerm)
             setDebouncedMin(minPrice)
             setDebouncedMax(maxPrice)
-        }, 500)
+        }, 300)
         return () => clearTimeout(timer)
     }, [searchTerm, minPrice, maxPrice])
 

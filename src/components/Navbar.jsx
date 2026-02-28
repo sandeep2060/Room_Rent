@@ -20,7 +20,7 @@ export default function Navbar() {
             <div className="header-inner">
                 <Link to="/" className="logo" onClick={closeNav}>
                     <span className="logo-icon">🏠</span>
-                    <span>RoomRent Nepal</span>
+                    <span style={{ color: 'white', fontWeight: '800' }}>RoomRent <span style={{ color: 'var(--accent)' }}>Nepal</span></span>
                 </Link>
                 <button
                     className="nav-toggle"

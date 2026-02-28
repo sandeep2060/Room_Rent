@@ -12,6 +12,7 @@ export default function Footer() {
                     <Link to="/">Home</Link>
                     <Link to="/login">Login</Link>
                     <Link to="/signup">Sign up</Link>
+                    <Link to="/admin-login" style={{ opacity: 0.5, fontSize: '0.8rem' }}>Admin Portal</Link>
                 </div>
                 <p className="footer-copy">
                     © {new Date().getFullYear()} RoomRent Nepal. All rights reserved.
