@@ -18,8 +18,6 @@ function SeekerOverview() {
     const [savedRoomIds, setSavedRoomIds] = useState(new Set())
     const [loading, setLoading] = useState(true)
     const [feedback, setFeedback] = useState(null)
-    const [isSeeking, setIsSeeking] = useState(profile?.is_seeking ?? false)
-    const [statusLoading, setStatusLoading] = useState(false)
 
     // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('')
@@ -230,29 +228,6 @@ function SeekerOverview() {
         }
     }
 
-    async function toggleSeeking() {
-        if (!profile) return
-        try {
-            setStatusLoading(true)
-            const newStatus = !isSeeking
-            const { error } = await supabase
-                .from('profiles')
-                .update({ is_seeking: newStatus })
-                .eq('id', profile.id)
-
-            if (error) throw error
-            setIsSeeking(newStatus)
-            setFeedback({
-                type: 'success',
-                message: newStatus ? 'Room seeking service ON!' : 'Room seeking service OFF.'
-            })
-        } catch (error) {
-            console.error('Error toggling seeking status:', error)
-            setFeedback({ type: 'error', message: 'Failed to update status.' })
-        } finally {
-            setStatusLoading(false)
-        }
-    }
 
     return (
         <div>
@@ -260,22 +235,6 @@ function SeekerOverview() {
                 <div>
                     <h1 className="dashboard-title" style={{ marginBottom: '0.25rem' }}>Welcome back, {profile?.name || 'Seeker'}</h1>
                     <p className="dashboard-subtitle" style={{ margin: 0 }}>Find your perfect room with advanced filtering.</p>
-                </div>
-
-                <div className="service-toggle-container">
-                    <span className="service-toggle-label">Room Seeking Service</span>
-                    <label className="service-toggle">
-                        <input
-                            type="checkbox"
-                            checked={isSeeking}
-                            onChange={toggleSeeking}
-                            disabled={statusLoading}
-                        />
-                        <span className="service-slider"></span>
-                    </label>
-                    <span className={isSeeking ? 'status-pill-active' : 'status-pill-inactive'}>
-                        {isSeeking ? 'ON' : 'OFF'}
-                    </span>
                 </div>
             </div>
 

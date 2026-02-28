@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { MapPin, Users, Heart, ArrowRight } from 'lucide-react'
+import { MapPin, Users, Heart, ArrowRight, Wifi, Check, Car, Droplets, Utensils, Wind, Sofa } from 'lucide-react'
 import HouseLoader from '../components/HouseLoader'
 import RoomImageCarousel from '../components/RoomImageCarousel'
 import RoomDetailsModal from '../components/RoomDetailsModal'
@@ -349,8 +349,25 @@ export default function Home() {
                                     <p className="listing-location" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                         <MapPin size={14} /> Area in {listing.address.split(',').pop().trim()}
                                     </p>
-                                    <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                    <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {listing.capacity} Capacity</span>
+                                        {listing.gender_preference && <span>{listing.gender_preference} Preference</span>}
+                                        {listing.amenities?.wifi && <span><Wifi size={14} /> WiFi</span>}
+                                        {listing.amenities?.attached_toilet && <span><Check size={14} /> Toilet</span>}
+                                        {listing.amenities?.water_supply && <span><Check size={14} /> Water</span>}
+                                        {listing.amenities?.hot_water && <span><Droplets size={14} /> Hot Water</span>}
+                                        {listing.amenities?.kitchen && <span><Utensils size={14} /> Kitchen</span>}
+                                        {listing.amenities?.balcony && <span><Check size={14} /> Balcony</span>}
+                                        {listing.amenities?.furnished && <span><Sofa size={14} /> Furnished</span>}
+                                        {listing.amenities?.ac && <span><Wind size={14} /> AC</span>}
+                                        {listing.amenities?.bike_parking > 0 && <span><Car size={14} /> Bike: {listing.amenities.bike_parking}</span>}
+                                        {listing.amenities?.car_parking > 0 && <span><Car size={14} /> Car: {listing.amenities.car_parking}</span>}
+                                        {listing.amenities?.windows && <span>{listing.amenities.windows} Windows</span>}
+                                        {/* Extra charges */}
+                                        {listing.internet_fee && <span>Internet: Nrs {listing.internet_fee}</span>}
+                                        {listing.water_fee && <span>Water: Nrs {listing.water_fee}</span>}
+                                        {listing.dust_fee && <span>Dust: Nrs {listing.dust_fee}</span>}
+                                        {listing.electricity_fee && <span>Electricity: Nrs {listing.electricity_fee}</span>}
                                     </div>
                                 </div>
                             </article>

@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
     room_id UUID REFERENCES public.rooms(id) ON DELETE CASCADE,
     seeker_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     provider_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-    status TEXT CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')) DEFAULT 'pending',
+    status TEXT CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled', 'declined')) DEFAULT 'pending',
     start_date DATE,
     stay_duration INTEGER,
     total_price_nrs DECIMAL,
@@ -126,6 +126,15 @@ CREATE POLICY "Providers can manage own rooms" ON public.rooms FOR ALL USING (au
 
 DROP POLICY IF EXISTS "Parties can view bookings" ON public.bookings;
 CREATE POLICY "Parties can view bookings" ON public.bookings FOR SELECT USING (auth.uid() = seeker_id OR auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
+
+DROP POLICY IF EXISTS "Seekers can insert bookings" ON public.bookings;
+CREATE POLICY "Seekers can insert bookings" ON public.bookings FOR INSERT WITH CHECK (auth.uid() = seeker_id);
+
+DROP POLICY IF EXISTS "Parties can update bookings" ON public.bookings;
+CREATE POLICY "Parties can update bookings" ON public.bookings FOR UPDATE USING (auth.uid() = seeker_id OR auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
+
+DROP POLICY IF EXISTS "Parties can delete bookings" ON public.bookings;
+CREATE POLICY "Parties can delete bookings" ON public.bookings FOR DELETE USING (auth.uid() = seeker_id OR auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
 
 -- Messages Policies
 DROP POLICY IF EXISTS "Parties can view messages" ON public.messages;
