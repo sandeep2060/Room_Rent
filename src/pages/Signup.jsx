@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { adToBs, bsToAd } from '@sbmdkl/nepali-date-converter'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
@@ -371,6 +371,9 @@ export default function Signup() {
                 <button type="submit" className="btn-primary auth-submit" disabled={loading}>
                     {loading ? 'Submitting...' : 'Create account'}
                 </button>
+                <div className="auth-footer">
+                    Already have an account? <Link to="/login">Login</Link>
+                </div>
             </form>
             {loading && <HouseLoader message="Setting up your new nest..." />}
             {feedback && (

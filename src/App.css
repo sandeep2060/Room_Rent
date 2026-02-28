@@ -1257,6 +1257,25 @@
   gap: 0.5rem;
 }
 
+.auth-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  width: 100%;
+}
+
+.auth-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
 .phone-prefix {
   padding: 0.75rem 0.9rem;
   border-radius: var(--radius-sm);

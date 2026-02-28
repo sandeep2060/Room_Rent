@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -220,6 +220,9 @@ export default function Login() {
                 <button type="submit" className="btn-primary auth-submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+                <div className="auth-footer">
+                    Don't have an account? <Link to="/signup">Signup</Link>
+                </div>
             </form>
             {loading && <HouseLoader message="Verifying your digital keys..." />}
             {feedback && (
