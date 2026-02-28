@@ -76,19 +76,6 @@ export default function Login() {
         setLoading(true)
         setError(null)
         try {
-            // Check if user exists first
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('email', resetEmail)
-                .maybeSingle()
-
-            if (profileError) throw profileError
-
-            if (!profile) {
-                throw new Error('This email address is not registered with us. Please check for typos or sign up.')
-            }
-
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                 redirectTo: `${window.location.origin}/reset-password`,
             })

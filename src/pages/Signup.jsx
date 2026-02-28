@@ -7,33 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
 
-const districts = [
-    'Bhojpur', 'Dhankuta', 'Ilam', 'Jhapa', 'Khotang', 'Morang', 'Okhaldhunga', 'Panchthar', 'Sankhuwasabha', 'Solukhumbu', 'Sunsari', 'Taplejung', 'Terhathum', 'Udayapur',
-    'Bara', 'Dhanusha', 'Mahottari', 'Parsa', 'Rautahat', 'Saptari', 'Sarlahi', 'Siraha',
-    'Bhaktapur', 'Chitwan', 'Dhading', 'Dolakha', 'Kathmandu', 'Kavrepalanchok', 'Lalitpur', 'Makwanpur', 'Nuwakot', 'Ramechhap', 'Rasuwa', 'Sindhuli', 'Sindhupalchok',
-    'Baglung', 'Gorkha', 'Kaski', 'Lamjung', 'Manang', 'Mustang', 'Myagdi', 'Nawalpur', 'Parbat', 'Syangja', 'Tanahun',
-    'Arghakhanchi', 'Banke', 'Bardiya', 'Dang', 'Gulmi', 'Kapilvastu', 'Parasi', 'Palpa', 'Pyuthan', 'Rolpa', 'Rukum East', 'Rupandehi',
-    'Dailekh', 'Dolpa', 'Humla', 'Jajarkot', 'Jumla', 'Kalikot', 'Mugu', 'Rukum West', 'Salyan', 'Surkhet',
-    'Achham', 'Baitadi', 'Bajhang', 'Bajura', 'Dadeldhura', 'Darchula', 'Doti', 'Kailali', 'Kanchanpur',
-]
-
-const municipalitiesByDistrict = {
-    Kathmandu: ['Kathmandu Metropolitan City', 'Kirtipur Municipality', 'Tokha Municipality', 'Budhanilkantha Municipality', 'Gokarneshwor Municipality'],
-    Lalitpur: ['Lalitpur Metropolitan City', 'Godawari Municipality', 'Mahalaxmi Municipality', 'Konjyosom Rural Municipality'],
-    Bhaktapur: ['Bhaktapur Municipality', 'Madhyapur Thimi Municipality', 'Suryabinayak Municipality', 'Changunarayan Municipality'],
-    Kaski: ['Pokhara Metropolitan City', 'Annapurna Rural Municipality', 'Madi Rural Municipality', 'Machhapuchhre Rural Municipality'],
-    Chitwan: ['Bharatpur Metropolitan City', 'Ratnanagar Municipality', 'Rapti Municipality', 'Kalika Municipality'],
-    Morang: ['Biratnagar Metropolitan City', 'Sundar Haraicha Municipality', 'Belbari Municipality', 'Ratuwamai Municipality'],
-    Sunsari: ['Dharan Sub-Metropolitan City', 'Itahari Sub-Metropolitan City', 'Inaruwa Municipality', 'Duhabi Municipality'],
-    Rupandehi: ['Butwal Sub-Metropolitan City', 'Siddharthanagar Municipality', 'Tilottama Municipality', 'Devdaha Municipality'],
-    Dhanusha: ['Janakpurdham Sub-Metropolitan City', 'Mithila Municipality', 'Hansapur Municipality', 'Ganeshman Charnath Municipality'],
-    Parsa: ['Birgunj Metropolitan City', 'Pokhariya Municipality', 'Bahudarmai Municipality'],
-    Kailali: ['Dhangadhi Sub-Metropolitan City', 'Tikapur Municipality', 'Lamkichuha Municipality', 'Ghodaghodi Municipality'],
-    Banke: ['Nepalgunj Sub-Metropolitan City', 'Kohalpur Municipality', 'Baijanath Rural Municipality'],
-    Dang: ['Ghorahi Sub-Metropolitan City', 'Tulsipur Sub-Metropolitan City', 'Lamahi Municipality'],
-    Jhapa: ['Birtamode Municipality', 'Mechinagar Municipality', 'Bhadrapur Municipality', 'Damak Municipality'],
-    Makwanpur: ['Hetauda Sub-Metropolitan City', 'Thaha Municipality', 'Manahari Rural Municipality'],
-}
+import { districts, municipalitiesByDistrict } from '../constants/nepalLocations'
 
 export default function Signup() {
     const [searchParams] = useSearchParams()
