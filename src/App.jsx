@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import DashboardSeeker from './pages/DashboardSeeker'
 import DashboardProvider from './pages/DashboardProvider'
+import ResetPassword from './pages/ResetPassword'
 import './App.css'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/" element={<><Navbar /><main><Home /></main><Footer /></>} />
         <Route path="/login" element={<><Navbar /><main><Login /></main><Footer /></>} />
         <Route path="/signup" element={<><Navbar /><main><Signup /></main><Footer /></>} />
+        <Route path="/reset-password" element={<><Navbar /><main><ResetPassword /></main><Footer /></>} />
 
         {/* Seeker Dashboard Routes */}
         <Route

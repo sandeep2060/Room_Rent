@@ -16,6 +16,9 @@ export default function Login() {
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
     const [feedback, setFeedback] = useState(null) // { type, message }
+    const [showPassword, setShowPassword] = useState(false)
+    const [resetMode, setResetMode] = useState(false)
+    const [resetEmail, setResetEmail] = useState('')
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
@@ -68,6 +71,67 @@ export default function Login() {
         }
     }
 
+    const handleResetRequest = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
+        try {
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            })
+            if (resetError) throw resetError
+            setFeedback({ type: 'success', message: 'Password reset link sent to your email!' })
+            setResetMode(false)
+        } catch (err) {
+            setFeedback({ type: 'error', message: err.message })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (resetMode) {
+        return (
+            <AuthLayout
+                title="Reset your password"
+                subtitle="Enter your email address and we'll send you a link to reset your password."
+            >
+                <form className="auth-form" onSubmit={handleResetRequest}>
+                    <div className="auth-grid">
+                        <div className="field field-full">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                required
+                                value={resetEmail}
+                                onChange={(e) => setResetEmail(e.target.value)}
+                                placeholder="name@example.com"
+                            />
+                        </div>
+                    </div>
+                    <button type="submit" className="btn-primary auth-submit" disabled={loading}>
+                        {loading ? 'Sending link...' : 'Send reset link'}
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-text"
+                        style={{ marginTop: '1rem', width: '100%', color: 'var(--text-muted)' }}
+                        onClick={() => setResetMode(false)}
+                    >
+                        Back to login
+                    </button>
+                </form>
+                {loading && <HouseLoader message="Sending reset instructions..." />}
+                {feedback && (
+                    <FeedbackPopup
+                        type={feedback.type}
+                        message={feedback.message}
+                        onClose={() => setFeedback(null)}
+                    />
+                )}
+            </AuthLayout>
+        )
+    }
+
     return (
         <AuthLayout
             title="Login to RoomRent Nepal"
@@ -100,11 +164,6 @@ export default function Login() {
                             </button>
                         </div>
                     </div>
-                    {error && (
-                        <div className="field field-full">
-                            <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>
-                        </div>
-                    )}
                     <div className="field field-full">
                         <label>Email</label>
                         <input
@@ -115,14 +174,44 @@ export default function Login() {
                         />
                     </div>
                     <div className="field field-full">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            required
-                            minLength={6}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <label>Password</label>
+                            <button
+                                type="button"
+                                className="btn-text"
+                                style={{ fontSize: '0.8rem', padding: 0 }}
+                                onClick={() => setResetMode(true)}
+                            >
+                                Forgot password?
+                            </button>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                minLength={6}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                style={{ paddingRight: '3rem' }}
+                            />
+                            <button
+                                type="button"
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                }}
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" className="btn-primary auth-submit" disabled={loading}>

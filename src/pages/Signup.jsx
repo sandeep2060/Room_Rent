@@ -57,6 +57,8 @@ export default function Signup() {
         address: '',
     })
 
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
     const [feedback, setFeedback] = useState(null)
@@ -213,11 +215,65 @@ export default function Signup() {
                     </div>
                     <div className="field">
                         <label>Password</label>
-                        <input name="password" type="password" required minLength={6} value={form.password} onChange={handleChange} />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                minLength={6}
+                                value={form.password}
+                                onChange={handleChange}
+                                style={{ paddingRight: '3rem' }}
+                            />
+                            <button
+                                type="button"
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                }}
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
                     <div className="field">
                         <label>Confirm password</label>
-                        <input name="confirmPassword" type="password" required minLength={6} value={form.confirmPassword} onChange={handleChange} />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                name="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                minLength={6}
+                                value={form.confirmPassword}
+                                onChange={handleChange}
+                                style={{ paddingRight: '3rem' }}
+                            />
+                            <button
+                                type="button"
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.8rem'
+                                }}
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                                {showConfirmPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
                     <div className="field">
                         <label>Gender</label>

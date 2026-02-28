@@ -32,8 +32,14 @@ function SeekerOverview() {
         if (profile) {
             fetchRecommendations()
             fetchSavedRoomIds()
+
+            // Handle incoming search from home page
+            const incomingSearch = new URLSearchParams(window.location.search).get('search')
+            if (incomingSearch && !searchTerm) {
+                setSearchTerm(incomingSearch)
+            }
         }
-    }, [profile, searchTerm, categoryFilter, genderFilter, minPrice, maxPrice])
+    }, [profile, categoryFilter, genderFilter, minPrice, maxPrice])
 
     async function fetchSavedRoomIds() {
         try {

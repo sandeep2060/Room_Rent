@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { MapPin, Search, Calendar, Users, Heart } from 'lucide-react'
 import HouseLoader from '../components/HouseLoader'
+import RoomDetailsModal from '../components/RoomDetailsModal'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 const steps = [
     {
@@ -37,13 +39,15 @@ const testimonials = [
 ]
 
 export default function Home() {
-    const { profile } = useAuth()
+    const { profile, session } = useAuth()
     const [location, setLocation] = useState('')
     const [checkIn, setCheckIn] = useState('')
     const [checkOut, setCheckOut] = useState('')
     const [guests, setGuests] = useState('1')
     const [rooms, setRooms] = useState([])
     const [loading, setLoading] = useState(true)
+    const [selectedRoom, setSelectedRoom] = useState(null)
+    const [feedback, setFeedback] = useState(null)
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -69,6 +73,7 @@ export default function Home() {
             const { data: generalData, error } = await supabase
                 .from('rooms')
                 .select('*')
+                .eq('is_active', true)
                 .order('created_at', { ascending: false })
                 .limit(6)
 
@@ -84,6 +89,59 @@ export default function Home() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleSearch = (e) => {
+        e.preventDefault()
+        if (profile?.role === 'provider') {
+            setFeedback({ type: 'warning', message: 'Providers cannot book rooms. Please use a seeker account.' })
+            return
+        }
+
+        const params = new URLSearchParams()
+        if (location) params.append('search', location)
+
+        if (session) {
+            navigate(`/dashboard-seeker?${params.toString()}`)
+        } else {
+            navigate(`/signup?role=seeker&${params.toString()}`)
+        }
+    }
+
+    const handleActionClick = (roleType) => {
+        if (!session) {
+            navigate(`/signup?role=${roleType}`)
+            return
+        }
+
+        if (profile?.role === roleType) {
+            navigate(roleType === 'seeker' ? '/dashboard-seeker' : '/dashboard-provider')
+        } else {
+            setFeedback({
+                type: 'warning',
+                message: `You are logged in as a ${profile.role}. Please logout to join as a ${roleType}.`
+            })
+        }
+    }
+
+    const handleRoomClick = (room) => {
+        if (!session) {
+            setFeedback({ type: 'warning', message: 'Please Login or Signup to view details and book!' })
+            setTimeout(() => navigate('/login'), 2000)
+            return
+        }
+
+        if (profile?.role === 'provider') {
+            setFeedback({ type: 'warning', message: 'As a provider, you can manage your own listings in your dashboard.' })
+            return
+        }
+
+        setSelectedRoom(room)
+    }
+
+    const handleBookRoom = async (roomId, duration) => {
+        // Simple redirection to dashboard for booking
+        navigate(`/dashboard-seeker?book=${roomId}&duration=${duration}`)
     }
 
     return (
@@ -121,7 +179,7 @@ export default function Home() {
                         mountain view stays with transparent prices in Nrs.
                     </p>
                     <div className="search-card">
-                        <div className="search-row">
+                        <form className="search-row" onSubmit={handleSearch}>
                             <div className="search-field">
                                 <label>District or city</label>
                                 <input
@@ -160,15 +218,15 @@ export default function Home() {
                                     ))}
                                 </select>
                             </div>
-                            <button className="btn-search">Search rooms in Nepal</button>
-                        </div>
+                            <button type="submit" className="btn-search">Search rooms in Nepal</button>
+                        </form>
                     </div>
                     <div className="hero-actions" style={{ gap: '1.5rem', width: '100%', maxWidth: '500px', margin: '1.5rem auto 0' }}>
                         <button
                             type="button"
                             className="btn-primary"
                             style={{ flex: 1, padding: '1.1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onClick={() => navigate('/signup?role=seeker')}
+                            onClick={() => handleActionClick('seeker')}
                         >
                             <Search size={18} /> I need a room
                         </button>
@@ -176,7 +234,7 @@ export default function Home() {
                             type="button"
                             className="btn-secondary"
                             style={{ flex: 1, padding: '1.1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onClick={() => navigate('/signup?role=provider')}
+                            onClick={() => handleActionClick('provider')}
                         >
                             <Calendar size={18} /> I provide rooms
                         </button>
@@ -218,7 +276,7 @@ export default function Home() {
                                 key={listing.id}
                                 className="listing-card"
                                 style={{ animationDelay: `${i * 0.1}s`, cursor: 'pointer' }}
-                                onClick={() => navigate('/login')}
+                                onClick={() => handleRoomClick(listing)}
                             >
                                 <div className="listing-image-wrap">
                                     <img src={listing.images?.[0] || 'https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80'} alt={listing.title} />
@@ -242,7 +300,14 @@ export default function Home() {
                         ))
                     )}
                 </div>
-                <button type="button" className="btn-outline">
+                <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={() => {
+                        if (profile?.role === 'seeker') navigate('/dashboard-seeker')
+                        else navigate('/signup?role=seeker')
+                    }}
+                >
                     View all Nepal listings
                 </button>
             </section>
@@ -302,20 +367,36 @@ export default function Home() {
                         <button
                             type="button"
                             className="btn-primary"
-                            onClick={() => navigate('/signup?role=seeker')}
+                            onClick={() => handleActionClick('seeker')}
                         >
                             I need a room
                         </button>
                         <button
                             type="button"
                             className="btn-secondary"
-                            onClick={() => navigate('/signup?role=provider')}
+                            onClick={() => handleActionClick('provider')}
                         >
                             I provide rooms
                         </button>
                     </div>
                 </div>
             </section>
+
+            {selectedRoom && (
+                <RoomDetailsModal
+                    room={selectedRoom}
+                    onClose={() => setSelectedRoom(null)}
+                    onRequestBook={handleBookRoom}
+                />
+            )}
+
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
+            )}
         </>
     )
 }
