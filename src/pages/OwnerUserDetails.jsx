@@ -73,7 +73,7 @@ export default function OwnerUserDetails() {
                         <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 1.5rem', background: 'var(--dash-surface)', border: '4px solid var(--accent-dim)' }}>
                             {user.avatar_url ? <img src={user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={50} style={{ marginTop: '20px' }} />}
                         </div>
-                        <h2 style={{ margin: 0 }}>{user.name}</h2>
+                        <h2 style={{ margin: 0 }}>{user.name || 'Incognito User'}</h2>
                         <span className={`badge ${user.role === 'provider' ? 'badge-accent' : 'badge-primary'}`} style={{ marginTop: '0.5rem' }}>
                             {user.role?.toUpperCase()}
                         </span>
@@ -84,22 +84,25 @@ export default function OwnerUserDetails() {
                             <Mail size={18} className="text-accent" />
                             <div>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>Email Address</p>
-                                <p style={{ margin: 0 }}>{user.email}</p>
+                                <p style={{ margin: 0 }}>{user.email || 'No email provided'}</p>
                             </div>
                         </div>
                         <div className="detail-item">
                             <Phone size={18} className="text-accent" />
                             <div>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>Phone Number</p>
-                                <p style={{ margin: 0 }}>+977 {user.phone}</p>
+                                <p style={{ margin: 0 }}>{user.phone ? `+977 ${user.phone}` : 'No phone provided'}</p>
                             </div>
                         </div>
                         <div className="detail-item">
                             <MapPin size={18} className="text-accent" />
                             <div>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>Home Address</p>
-                                <p style={{ margin: 0 }}>{user.district}, {user.municipality}, Ward {user.ward}</p>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>{user.address}</p>
+                                <p style={{ margin: 0 }}>
+                                    {user.district || 'Unspecified'} District, {user.municipality || 'Unspecified Municipality'}
+                                    {user.ward ? `, Ward ${user.ward}` : ''}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>{user.address || 'No specific street address provided.'}</p>
                             </div>
                         </div>
                         <div className="detail-item">

@@ -121,7 +121,7 @@ export default function DashboardLayout({ children, role }) {
                         <div className="dash-user-info">
                             <span className="name">{profile?.name || 'User'}</span>
                             <span className="role">
-                                {role === 'seeker' ? 'Room Seeker' : role === 'provider' ? 'Room Provider' : 'Admin'}
+                                {role === 'seeker' ? 'Room Seeker' : role === 'provider' ? 'Room Provider' : 'Master Owner'}
                             </span>
                         </div>
                     </div>

@@ -13,6 +13,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
     name TEXT,
+    email TEXT,
     role TEXT CHECK (role IN ('seeker', 'provider', 'owner')),
     gender TEXT,
     dob_ad DATE,
@@ -162,9 +163,35 @@ CREATE POLICY "Users can manage saved rooms" ON public.saved_rooms FOR ALL USING
 -- ASSIGN OWNER ROLE (Run this after creating the user in Auth)
 -- UPDATE public.profiles SET role = 'owner' WHERE email = 'sandeepgaire8@gmail.com';
 
--- ==========================================
+-- SYNC TRIGGER FOR NEW USERS
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, name, email, role, phone, district, municipality, ward, gender, dob_ad, dob_bs, device_info)
+  VALUES (
+    new.id,
+    new.raw_user_meta_data->>'name',
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'role', 'seeker'),
+    new.raw_user_meta_data->>'phone',
+    new.raw_user_meta_data->>'district',
+    new.raw_user_meta_data->>'municipality',
+    (new.raw_user_meta_data->>'ward')::INTEGER,
+    new.raw_user_meta_data->>'gender',
+    (new.raw_user_meta_data->>'dobAd')::DATE,
+    new.raw_user_meta_data->>'dobBs',
+    new.raw_user_meta_data->>'device_info'
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
 -- STORAGE BUCKET SETUP (Fixes "Bucket Not Found")
--- ==========================================
 
 -- 1. Create Buckets
 INSERT INTO storage.buckets (id, name, public)

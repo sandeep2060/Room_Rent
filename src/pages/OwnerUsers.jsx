@@ -23,7 +23,7 @@ export default function OwnerUsers() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, name, avatar_url, phone, role, district, municipality, gender, created_at, is_account_active, wallet_balance, penalty_amount, total_paid_amount, address, ward')
+                .select('id, name, email, avatar_url, phone, role, district, municipality, gender, created_at, is_account_active, wallet_balance, penalty_amount, total_paid_amount, address, ward')
 
             if (error) throw error
             setUsers(data || [])
@@ -37,6 +37,7 @@ export default function OwnerUsers() {
     const filteredUsers = users
         .filter(u => {
             const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) ||
+                u.email?.toLowerCase().includes(search.toLowerCase()) ||
                 u.phone?.includes(search)
             const matchesDistrict = !filterDistrict || u.district === filterDistrict
             const matchesGender = !filterGender || u.gender === filterGender
@@ -140,8 +141,8 @@ export default function OwnerUsers() {
                                                 {u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} />}
                                             </div>
                                             <div>
-                                                <p style={{ margin: 0, fontWeight: 'bold' }}>{u.name}</p>
-                                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>{u.phone || 'No phone'}</p>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>{u.name || 'Incognito User'}</p>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>{u.email || u.phone || 'No contact info'}</p>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
                                                     <MapPin size={12} />
                                                     <span>{u.address || `${u.municipality}, ${u.district}`}</span>
