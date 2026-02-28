@@ -203,13 +203,23 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             </h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={duration}
-                                        onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                                        style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-surface)', color: 'var(--dash-text)', outline: 'none' }}
-                                    />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--dash-surface)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDuration(Math.max(1, duration - 1))}
+                                            style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--dash-border)', color: 'var(--dash-text)', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            -
+                                        </button>
+                                        <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 'bold' }}>{duration}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDuration(duration + 1)}
+                                            style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                     <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>
                                         {room.rent_category === 'monthly' ? 'Months' : room.rent_category === 'daily' ? 'Days' : 'Hours'}
                                     </span>

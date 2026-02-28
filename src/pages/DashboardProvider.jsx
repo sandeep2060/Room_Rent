@@ -165,19 +165,20 @@ function ProviderAnalytics() {
                             <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Guest</th>
                             <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Dates</th>
                             <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Room</th>
+                            <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Total Price</th>
                             <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Status</th>
                             <th style={{ padding: '1rem 1.5rem', color: 'var(--dash-text-muted)', fontWeight: '500', fontSize: '0.9rem' }}>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center' }}>
+                            <tr><td colSpan="6" style={{ padding: '3rem', textAlign: 'center' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                                     <HouseLoader message="Retrieving your latest requests..." showPercentage={false} />
                                 </div>
                             </td></tr>
                         ) : bookings.length === 0 ? (
-                            <tr><td colSpan="5" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--dash-text-muted)' }}>No booking requests yet.</td></tr>
+                            <tr><td colSpan="6" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--dash-text-muted)' }}>No booking requests yet.</td></tr>
                         ) : (
                             bookings.map((booking) => (
                                 <tr key={booking.id} style={{ borderBottom: '1px solid var(--dash-border)' }}>
@@ -198,7 +199,8 @@ function ProviderAnalytics() {
                                             </div>
                                         )}
                                     </td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem' }}>{booking.rooms?.title}</td>
+                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', fontWeight: '500' }}>{booking.rooms?.title}</td>
+                                    <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem', color: 'var(--accent)', fontWeight: 'bold' }}>Nrs {booking.total_price_nrs}</td>
                                     <td style={{ padding: '1rem 1.5rem' }}>
                                         <span style={{
                                             padding: '0.25rem 0.5rem',
