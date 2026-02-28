@@ -46,13 +46,44 @@ export default function Home() {
     const [guests, setGuests] = useState('1')
     const [rooms, setRooms] = useState([])
     const [loading, setLoading] = useState(true)
+    const [stats, setStats] = useState({ seekers: 0, providers: 0, rooms: 0 })
     const [selectedRoom, setSelectedRoom] = useState(null)
     const [feedback, setFeedback] = useState(null)
     const navigate = useNavigate()
 
     useEffect(() => {
         fetchFeaturedRooms()
+        fetchStats()
     }, [profile])
+
+    async function fetchStats() {
+        try {
+            // Fetch seekers count
+            const { count: seekerCount } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'seeker')
+
+            // Fetch providers count
+            const { count: providerCount } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'provider')
+
+            // Fetch rooms count
+            const { count: roomCount } = await supabase
+                .from('rooms')
+                .select('*', { count: 'exact', head: true })
+
+            setStats({
+                seekers: seekerCount || 0,
+                providers: providerCount || 0,
+                rooms: roomCount || 0
+            })
+        } catch (err) {
+            console.error('Error fetching stats:', err)
+        }
+    }
 
     async function fetchFeaturedRooms() {
         try {
@@ -238,6 +269,34 @@ export default function Home() {
                         >
                             <Calendar size={18} /> I provide rooms
                         </button>
+                    </div>
+                </div>
+            </section>
+
+            <section className="stats-section">
+                <div className="section-inner">
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-icon"><Users size={24} /></div>
+                            <div className="stat-content">
+                                <span className="stat-number">{stats.seekers.toLocaleString()}+</span>
+                                <span className="stat-label">Room Seekers</span>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon" style={{ background: 'rgba(255, 107, 203, 0.15)', color: 'var(--accent2)' }}><Calendar size={24} /></div>
+                            <div className="stat-content">
+                                <span className="stat-number">{stats.providers.toLocaleString()}+</span>
+                                <span className="stat-label">Trusted Hosts</span>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon" style={{ background: 'rgba(255, 209, 102, 0.15)', color: 'var(--accent3)' }}><Heart size={24} /></div>
+                            <div className="stat-content">
+                                <span className="stat-number">{stats.rooms.toLocaleString()}+</span>
+                                <span className="stat-label">Rooms Listed</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
