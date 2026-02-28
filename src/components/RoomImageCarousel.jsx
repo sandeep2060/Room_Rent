@@ -6,7 +6,7 @@ export default function RoomImageCarousel({ images, alt, height = '200px' }) {
 
     const displayImages = images && images.length > 0
         ? images
-        : ['https://images.unsplash.com/photo-1549294413-26f195200c16?w=800&q=80']
+        : ['/src/assets/roomblankimage.png']
 
     useEffect(() => {
         if (displayImages.length <= 1 || isHovered) return

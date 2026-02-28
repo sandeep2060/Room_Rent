@@ -263,7 +263,7 @@ function ProviderListings() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
                     {listings.map(room => (
                         <div key={room.id} className="dashboard-card" style={{ display: 'flex', gap: '1.5rem', padding: '1.5rem', alignItems: 'center' }}>
-                            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1520256862855-398228c41684?w=400&q=80'} alt="Room" style={{ width: '160px', height: '120px', objectFit: 'cover', borderRadius: '8px' }} />
+                            <img src={room.images?.[0] || '/src/assets/roomblankimage.png'} alt="Room" style={{ width: '160px', height: '120px', objectFit: 'cover', borderRadius: '8px' }} />
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
