@@ -4,6 +4,7 @@ import { adToBs, bsToAd } from '@sbmdkl/nepali-date-converter'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
+import { Eye, EyeOff, User, Mail, Lock, CheckCircle2, XCircle } from 'lucide-react'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
 
@@ -36,20 +37,53 @@ export default function Signup() {
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
     const [feedback, setFeedback] = useState(null)
+    const [validationErrors, setValidationErrors] = useState({
+        email: '',
+        password: '',
+        confirmPassword: ''
+    })
 
     // Redirect if already logged in
     if (session) {
         navigate('/')
     }
 
+    const validateField = (name, value) => {
+        let error = ''
+        if (name === 'email') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (value && !emailRegex.test(value)) {
+                error = 'Please enter a valid email address'
+            }
+        } else if (name === 'password') {
+            if (value && value.length < 6) {
+                error = 'Password must be at least 6 characters'
+            }
+        } else if (name === 'confirmPassword') {
+            if (value && value !== form.password) {
+                error = 'Passwords do not match'
+            }
+        }
+        setValidationErrors(prev => ({ ...prev, [name]: error }))
+    }
+
     const handleChange = (e) => {
         const { name, value } = e.target
         setForm((prev) => {
+            const newState = { ...prev, [name]: value }
             if (name === 'district') {
-                return { ...prev, district: value, municipality: '' }
+                newState.municipality = ''
             }
-            return { ...prev, [name]: value }
+            return newState
         })
+
+        // Instant validation
+        if (['email', 'password', 'confirmPassword'].includes(name)) {
+            validateField(name, value)
+            if (name === 'password' && form.confirmPassword) {
+                validateField('confirmPassword', form.confirmPassword)
+            }
+        }
     }
 
     const handleDobAdChange = (e) => {
@@ -185,7 +219,8 @@ export default function Signup() {
                     </div>
                     <div className="field">
                         <label>Email</label>
-                        <input name="email" type="email" required value={form.email} onChange={handleChange} />
+                        <input name="email" type="email" required value={form.email} onChange={handleChange} className={validationErrors.email ? 'input-error' : ''} />
+                        {validationErrors.email && <span className="error-text">{validationErrors.email}</span>}
                     </div>
                     <div className="field">
                         <label>Password</label>
@@ -197,26 +232,19 @@ export default function Signup() {
                                 minLength={6}
                                 value={form.password}
                                 onChange={handleChange}
-                                style={{ paddingRight: '3rem' }}
+                                style={{ paddingRight: '3.5rem' }}
+                                className={validationErrors.password ? 'input-error' : ''}
                             />
                             <button
                                 type="button"
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem'
-                                }}
+                                className="password-toggle"
                                 onClick={() => setShowPassword(!showPassword)}
+                                tabIndex="-1"
                             >
-                                {showPassword ? 'Hide' : 'Show'}
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                        {validationErrors.password && <span className="error-text">{validationErrors.password}</span>}
                     </div>
                     <div className="field">
                         <label>Confirm password</label>
@@ -228,26 +256,19 @@ export default function Signup() {
                                 minLength={6}
                                 value={form.confirmPassword}
                                 onChange={handleChange}
-                                style={{ paddingRight: '3rem' }}
+                                style={{ paddingRight: '3.5rem' }}
+                                className={validationErrors.confirmPassword ? 'input-error' : ''}
                             />
                             <button
                                 type="button"
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem'
-                                }}
+                                className="password-toggle"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                tabIndex="-1"
                             >
-                                {showConfirmPassword ? 'Hide' : 'Show'}
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                        {validationErrors.confirmPassword && <span className="error-text">{validationErrors.confirmPassword}</span>}
                     </div>
                     <div className="field">
                         <label>Gender</label>

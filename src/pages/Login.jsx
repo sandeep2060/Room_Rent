@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
@@ -19,6 +20,7 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false)
     const [resetMode, setResetMode] = useState(false)
     const [resetEmail, setResetEmail] = useState('')
+    const [emailError, setEmailError] = useState('')
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
@@ -170,8 +172,18 @@ export default function Login() {
                             type="email"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => {
+                                setEmail(e.target.value)
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                                if (e.target.value && !emailRegex.test(e.target.value)) {
+                                    setEmailError('Please enter a valid email address')
+                                } else {
+                                    setEmailError('')
+                                }
+                            }}
+                            className={emailError ? 'input-error' : ''}
                         />
+                        {emailError && <span className="error-text">{emailError}</span>}
                     </div>
                     <div className="field field-full">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -192,24 +204,15 @@ export default function Login() {
                                 minLength={6}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                style={{ paddingRight: '3rem' }}
+                                style={{ paddingRight: '3.5rem' }}
                             />
                             <button
                                 type="button"
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem'
-                                }}
+                                className="password-toggle"
                                 onClick={() => setShowPassword(!showPassword)}
+                                tabIndex="-1"
                             >
-                                {showPassword ? 'Hide' : 'Show'}
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
                     </div>

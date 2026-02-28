@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import FeedbackPopup from '../components/FeedbackPopup'
@@ -9,15 +10,36 @@ export default function ResetPassword() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [feedback, setFeedback] = useState(null)
+    const [validationErrors, setValidationErrors] = useState({
+        password: '',
+        confirmPassword: ''
+    })
     const navigate = useNavigate()
+
+    const validateFields = (p, cp) => {
+        const errors = { password: '', confirmPassword: '' }
+        if (p && p.length < 6) {
+            errors.password = 'Password must be at least 6 characters'
+        }
+        if (cp && cp !== p) {
+            errors.confirmPassword = 'Passwords do not match'
+        }
+        setValidationErrors(errors)
+    }
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault()
 
         if (password !== confirmPassword) {
             setFeedback({ type: 'warning', message: 'Passwords do not match!' })
+            return
+        }
+
+        if (password.length < 6) {
+            setFeedback({ type: 'error', message: 'Password must be at least 6 characters' })
             return
         }
 
@@ -55,37 +77,49 @@ export default function ResetPassword() {
                                 required
                                 minLength={6}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                style={{ paddingRight: '3rem' }}
+                                onChange={(e) => {
+                                    setPassword(e.target.value)
+                                    validateFields(e.target.value, confirmPassword)
+                                }}
+                                style={{ paddingRight: '3.5rem' }}
+                                className={validationErrors.password ? 'input-error' : ''}
                             />
                             <button
                                 type="button"
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '0.8rem'
-                                }}
+                                className="password-toggle"
                                 onClick={() => setShowPassword(!showPassword)}
+                                tabIndex="-1"
                             >
-                                {showPassword ? 'Hide' : 'Show'}
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                        {validationErrors.password && <span className="error-text">{validationErrors.password}</span>}
                     </div>
                     <div className="field field-full">
                         <label>Confirm New Password</label>
-                        <input
-                            type="password"
-                            required
-                            minLength={6}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                minLength={6}
+                                value={confirmPassword}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value)
+                                    validateFields(password, e.target.value)
+                                }}
+                                style={{ paddingRight: '3.5rem' }}
+                                className={validationErrors.confirmPassword ? 'input-error' : ''}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                tabIndex="-1"
+                            >
+                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                        {validationErrors.confirmPassword && <span className="error-text">{validationErrors.confirmPassword}</span>}
                     </div>
                 </div>
                 <button type="submit" className="btn-primary auth-submit" disabled={loading}>
