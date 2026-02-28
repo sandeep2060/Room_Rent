@@ -124,3 +124,34 @@ CREATE POLICY "Parties can view messages" ON public.messages FOR SELECT USING (a
 
 -- ASSIGN OWNER ROLE (Run this after creating the user in Auth)
 -- UPDATE public.profiles SET role = 'owner' WHERE email = 'sandeepgaire8@gmail.com';
+
+-- ==========================================
+-- STORAGE BUCKET SETUP (Fixes "Bucket Not Found")
+-- ==========================================
+
+-- 1. Create Buckets
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true),
+       ('room-images', 'room-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 2. Storage Policies for 'avatars'
+DROP POLICY IF EXISTS "Public Access Avatars" ON storage.objects;
+CREATE POLICY "Public Access Avatars" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+
+DROP POLICY IF EXISTS "Auth Upload Avatars" ON storage.objects;
+CREATE POLICY "Auth Upload Avatars" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+
+-- 3. Storage Policies for 'room-images'
+DROP POLICY IF EXISTS "Public Access Rooms" ON storage.objects;
+CREATE POLICY "Public Access Rooms" ON storage.objects FOR SELECT USING (bucket_id = 'room-images');
+
+DROP POLICY IF EXISTS "Auth Upload Rooms" ON storage.objects;
+CREATE POLICY "Auth Upload Rooms" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'room-images' AND auth.role() = 'authenticated');
+
+-- 4. Allow users to update their own images
+DROP POLICY IF EXISTS "Users can update own files" ON storage.objects;
+CREATE POLICY "Users can update own files" ON storage.objects FOR UPDATE USING (auth.uid() = owner);
+
+DROP POLICY IF EXISTS "Users can delete own files" ON storage.objects;
+CREATE POLICY "Users can delete own files" ON storage.objects FOR DELETE USING (auth.uid() = owner);

@@ -142,15 +142,37 @@ export default function Signup() {
             const { latitude, longitude } = position.coords
 
             try {
-                // Reverse geocode using Nominatim
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
-                const data = await response.json()
+                // Reverse geocode using Nominatim with identification
+                let nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&email=sandeepgaire8@gmail.com`
+                let data;
 
-                const address = data.address
+                try {
+                    const response = await fetch(nominatimUrl)
+                    if (response.ok) {
+                        data = await response.json()
+                    } else {
+                        throw new Error('Nominatim 403/Blocked')
+                    }
+                } catch (e) {
+                    console.log('Nominatim failed, trying BigDataCloud fallback...')
+                    const fallbackUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                    const fallbackRes = await fetch(fallbackUrl)
+                    const fallbackData = await fallbackRes.json()
+                    // Map BigDataCloud to Nominatim-like structure
+                    data = {
+                        display_name: `${fallbackData.locality}, ${fallbackData.principalSubdivision}, ${fallbackData.countryName}`,
+                        address: {
+                            state_district: fallbackData.principalSubdivision,
+                            city: fallbackData.city || fallbackData.locality
+                        }
+                    }
+                }
+
+                const address = data.address || {}
                 const district = address.state_district || address.county || ''
                 const municipality = address.city || address.town || address.village || address.suburb || ''
 
-                // Clean up "District" suffix from Nominatim if it exists
+                // Clean up "District" suffix
                 const cleanDistrict = district.replace(' District', '')
 
                 setForm(prev => ({

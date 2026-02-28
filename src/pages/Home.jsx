@@ -65,26 +65,43 @@ export default function Home() {
     const detectLiveLocation = () => {
         if (!navigator.geolocation) return
 
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const { latitude, longitude } = position.coords
+        // 1. Get Live Location with Fallback
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords
+
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`)
-                const data = await response.json()
-                const address = data.address
+                // Try Nominatim with identification
+                const nomUrl = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=jsonv2&addressdetails=1&email=sandeepgaire8@gmail.com`
+                let data
 
-                // Try to extract district and municipality from Nominatim response
-                // Nominatim labels for Nepal can vary: 'county' often maps to district, 'city'/'town' to municipality
-                const district = address.county || address.state_district || ''
-                const municipality = address.city || address.town || address.village || address.suburb || ''
-
-                if (district || municipality) {
-                    setLiveLocation({
-                        district: district.replace(' District', ''),
-                        municipality
-                    })
+                try {
+                    const response = await fetch(nomUrl)
+                    if (response.ok) {
+                        data = await response.json()
+                    } else {
+                        throw new Error('Nominatim Blocked')
+                    }
+                } catch (e) {
+                    console.log('Nominatim failed, trying BigDataCloud fallback...')
+                    const fbUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                    const fbRes = await fetch(fbUrl)
+                    const fbData = await fbRes.json()
+                    data = {
+                        display_name: `${fbData.locality}, ${fbData.principalSubdivision}`,
+                        address: { state_district: fbData.principalSubdivision }
+                    }
                 }
+
+                const district = data.address?.state_district?.replace(' District', '') || ''
+                setLiveLocation({
+                    lat: latitude,
+                    lng: longitude,
+                    district: district,
+                    address: data.display_name
+                })
             } catch (err) {
                 console.error('Error reverse geocoding:', err)
+                setLiveLocation({ lat: latitude, lng: longitude })
             }
         }, (err) => {
             console.error('Geolocation error:', err)
