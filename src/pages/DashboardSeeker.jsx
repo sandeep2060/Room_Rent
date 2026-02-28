@@ -57,19 +57,19 @@ function SeekerOverview() {
             }
 
             const bookId = params.get('book')
-            if (bookId && recommendedRooms.length > 0) {
+            if (bookId) {
                 const durationParam = params.get('duration')
                 const startParam = params.get('startTime')
                 const endParam = params.get('endTime')
 
-                // Clear URL params
+                // Clear URL params immediately so we don't re-trigger on re-render
                 navigate('/dashboard-seeker', { replace: true })
 
-                // Trigger booking
+                // Trigger booking (it will fetch the room details internally if needed)
                 handleBookRoom(bookId, parseInt(durationParam) || 1, startParam, endParam)
             }
         }
-    }, [profile, categoryFilter, genderFilter, debouncedSearch, debouncedMin, debouncedMax, recommendedRooms.length])
+    }, [profile, categoryFilter, genderFilter, debouncedSearch, debouncedMin, debouncedMax])
 
     async function fetchSavedRoomIds() {
         try {
@@ -152,36 +152,37 @@ function SeekerOverview() {
 
             if (!window.confirm(`Request to book "${room.title}" for ${duration} ${room.rent_category === 'monthly' ? 'months' : room.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
 
-            // Check if already booked
-            const { data: existing, error: checkError } = await supabase
+            // Check if already booked with more robust check
+            const { data: existing } = await supabase
                 .from('bookings')
                 .select('id')
                 .eq('room_id', roomId)
                 .eq('seeker_id', profile.id)
                 .in('status', ['pending', 'accepted'])
-                .single()
+                .maybeSingle()
 
             if (existing) {
-                setFeedback({ type: 'warning', message: 'Active request already exists!' })
+                setFeedback({ type: 'warning', message: 'You already have an active request for this room!' })
                 return
             }
 
-            const fee = Math.round(room.price_nrs * duration * 0.02)
+            const total_price = Number(room.price_nrs) * duration
+            const fee = Math.round(total_price * 0.02)
 
-            const { error } = await supabase.from('bookings').insert([{
+            const { error: bookingError } = await supabase.from('bookings').insert([{
                 room_id: roomId,
                 seeker_id: profile.id,
                 provider_id: room.provider_id,
                 start_date: new Date().toISOString().split('T')[0],
                 status: 'pending',
                 stay_duration: duration,
-                total_price_nrs: room.price_nrs * duration,
+                total_price_nrs: total_price,
                 seeker_fee: fee,
-                start_time: startTime,
-                end_time: endTime
+                start_time: startTime || null,
+                end_time: endTime || null
             }])
 
-            if (error) throw error
+            if (bookingError) throw bookingError
 
             // Update user wallet and debt timer
             const newBalance = (profile.wallet_balance || 0) + fee
@@ -196,14 +197,12 @@ function SeekerOverview() {
                 .update(updatePayload)
                 .eq('id', profile.id)
 
-            setFeedback({ type: 'success', message: `Booking Requested! (Fee: Nrs ${fee} added to wallet)` })
+            setFeedback({ type: 'success', message: `Booking Requested! (Service Fee: Nrs ${fee} added to your wallet balance)` })
 
             // Auto-navigate to bookings after 2 seconds
             setTimeout(() => {
-                const params = new URLSearchParams(window.location.search)
-                params.set('tab', 'bookings')
                 navigate('/dashboard-seeker/bookings')
-            }, 2000)
+            }, 2500)
         } catch (error) {
             console.error('Error booking room', error)
             setFeedback({ type: 'error', message: 'Booking Failed.' })
@@ -430,24 +429,69 @@ function SeekerSaved() {
     }
 
     // Reuse overview logic if needed or define locally
-    async function handleBookRoomLocal(roomId, duration) {
-        if (!window.confirm('Request to book this room?')) return;
+    async function handleBookRoomLocal(roomId, duration, startTime = null, endTime = null) {
+        // Find room details from saved rooms
+        const room = savedRooms.find(r => r.id === roomId)
+        if (!room) return;
+
+        if (!window.confirm(`Request to book "${room.title}" for ${duration} ${room.rent_category === 'monthly' ? 'months' : room.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
+
         try {
-            const room = savedRooms.find(r => r.id === roomId)
-            const { error } = await supabase.from('bookings').insert([{
+            setLoading(true)
+
+            // Duplicate Check
+            const { data: existing } = await supabase
+                .from('bookings')
+                .select('id')
+                .eq('room_id', roomId)
+                .eq('seeker_id', profile.id)
+                .in('status', ['pending', 'accepted'])
+                .maybeSingle()
+
+            if (existing) {
+                alert('You already have an active request for this room!')
+                return
+            }
+
+            const total_price = Number(room.price_nrs) * duration
+            const fee = Math.round(total_price * 0.02)
+
+            // Insert Booking
+            const { error: bookingError } = await supabase.from('bookings').insert([{
                 room_id: roomId,
                 seeker_id: profile.id,
                 provider_id: room.provider_id,
                 start_date: new Date().toISOString().split('T')[0],
                 status: 'pending',
                 stay_duration: duration,
-                total_price_nrs: room.price_nrs * duration
+                total_price_nrs: total_price,
+                seeker_fee: fee,
+                start_time: startTime,
+                end_time: endTime
             }])
-            if (error) throw error
-            alert('Booking request sent!')
+
+            if (bookingError) throw bookingError
+
+            // Update Wallet
+            const newBalance = (profile.wallet_balance || 0) + fee
+            const updatePayload = { wallet_balance: newBalance }
+            if ((profile.wallet_balance || 0) === 0) {
+                updatePayload.last_payment_date = new Date().toISOString()
+            }
+
+            await supabase
+                .from('profiles')
+                .update(updatePayload)
+                .eq('id', profile.id)
+
+            alert(`Booking Requested! Service Fee: Nrs ${fee} has been added to your wallet.`)
+            navigate('/dashboard-seeker/bookings')
+
         } catch (error) {
             console.error('Error booking', error)
-            alert('Fails to book.')
+            alert('Booking Failed. Please check your connection.')
+        } finally {
+            setLoading(false)
         }
     }
 
