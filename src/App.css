@@ -1609,3 +1609,114 @@ input:checked+.service-slider:before {
   font-weight: bold;
   border: 1px solid var(--border);
 }
+
+/* Signup UX Improvements */
+.signup-section {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.signup-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.signup-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.location-btn-prominent {
+  width: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem !important;
+  background: linear-gradient(135deg, var(--accent), #00d2ff) !important;
+  color: var(--bg-solid) !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius-sm) !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 20px rgba(0, 245, 160, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.location-btn-prominent:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(0, 245, 160, 0.4);
+  filter: brightness(1.1);
+}
+
+.location-btn-prominent:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.location-btn-prominent.loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+/* Pulse animation for location button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(0, 245, 160, 0.7);
+  }
+
+  70% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(0, 245, 160, 0);
+  }
+
+  100% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(0, 245, 160, 0);
+  }
+}
+
+.pulse-effect {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* Mobile Logout Button */
+.mobile-logout-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(1.05);
+}

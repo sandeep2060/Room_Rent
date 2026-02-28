@@ -34,11 +34,16 @@ CREATE TABLE IF NOT EXISTS public.rooms (
     description TEXT,
     price_nrs DECIMAL NOT NULL,
     rent_category TEXT CHECK (rent_category IN ('hourly', 'daily', 'monthly')),
+    capacity INTEGER DEFAULT 1,
+    people_capacity INTEGER DEFAULT 1, -- Fallback for frontend
+    gender_preference TEXT DEFAULT 'all',
     district TEXT,
     municipality TEXT,
     ward INTEGER,
     address TEXT,
-    amenities TEXT[],
+    latitude FLOAT8,
+    longitude FLOAT8,
+    amenities JSONB DEFAULT '{}'::jsonb,
     images TEXT[],
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
@@ -96,19 +101,23 @@ ALTER TABLE public.saved_rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
--- POLICIES (Simplified for Owner Access)
--- Profiles: Users can read all (for search), update their own. Owner can read/update all.
+-- POLICIES
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Rooms: Viewable by all, managed by providers.
+DROP POLICY IF EXISTS "Rooms are viewable by everyone" ON public.rooms;
 CREATE POLICY "Rooms are viewable by everyone" ON public.rooms FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Providers can manage own rooms" ON public.rooms;
 CREATE POLICY "Providers can manage own rooms" ON public.rooms FOR ALL USING (auth.uid() = provider_id);
 
--- Bookings: Viewable by involved parties and owner.
+DROP POLICY IF EXISTS "Parties can view bookings" ON public.bookings;
 CREATE POLICY "Parties can view bookings" ON public.bookings FOR SELECT USING (auth.uid() = seeker_id OR auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
 
--- Messages: Viewable by involved parties.
+DROP POLICY IF EXISTS "Parties can view messages" ON public.messages;
 CREATE POLICY "Parties can view messages" ON public.messages FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
 -- ASSIGN OWNER ROLE (Run this after creating the user in Auth)
