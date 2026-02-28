@@ -1699,7 +1699,8 @@ input:checked+.service-slider:before {
 }
 
 .pulse-effect {
-  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+  animation: pulse-ring 2s infinite;
+  border: 1px solid var(--accent) !important;
 }
 
 /* Mobile Logout Button */

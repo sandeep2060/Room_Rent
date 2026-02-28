@@ -396,49 +396,82 @@ export default function Signup() {
                     </div>
                 </div>
 
-                {/* 4. Geography & Security */}
-                <div className="signup-section" style={{ border: form.lat ? '1px solid #34d399' : '' }}>
+                {/* 4. Geography & Security (Real Background Track) */}
+                <div className="signup-section" style={{ border: form.lat ? '2.5px solid #34d399' : '1px solid var(--border)', boxShadow: form.lat ? '0 0 20px rgba(52, 211, 153, 0.1)' : 'none' }}>
                     <div className="signup-section-title" style={{ color: form.lat ? '#34d399' : '' }}>
-                        <MapPin size={18} /> Location & Security
+                        <MapPin size={18} /> Location & Security (Real Background Track)
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={handleGetLocation}
-                        className={`location-btn-prominent ${loading ? 'loading' : ''} ${!form.lat ? 'pulse-effect' : ''}`}
-                        disabled={loading}
-                    >
-                        {form.lat ? <CheckCircle2 size={22} /> : <MapPin size={22} />}
-                        {loading ? 'Detecting Location...' : form.lat ? 'Location Verified' : 'Tap to Verify My Current Location'}
-                    </button>
+                    <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                        <button
+                            type="button"
+                            onClick={handleGetLocation}
+                            className={`location-btn-prominent ${loading ? 'loading' : ''} ${!form.lat ? 'pulse-effect' : ''}`}
+                            disabled={loading}
+                            style={{
+                                height: '60px',
+                                fontSize: '1.1rem',
+                                letterSpacing: '0.5px',
+                                boxShadow: form.lat ? 'none' : '0 15px 35px rgba(0, 245, 160, 0.3)'
+                            }}
+                        >
+                            {form.lat ? <CheckCircle2 size={26} /> : <MapPin size={26} />}
+                            {loading ? 'Detecting Location...' : form.lat ? 'LIVE LOCATION VERIFIED' : 'GET CURRENT LOCATION NOW'}
+                        </button>
+                    </div>
 
-                    <div className="auth-grid">
+                    <div className="auth-grid" style={{ opacity: form.lat ? 1 : 0.6, pointerEvents: form.lat ? 'auto' : 'none' }}>
                         <div className="field">
-                            <label>District</label>
-                            <select name="district" required value={form.district} onChange={handleChange}>
-                                <option value="">Choose District</option>
-                                {districts.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
+                            <label>District {form.lat && <span className="verified-badge">✓ Verified</span>}</label>
+                            <input
+                                name="district"
+                                type="text"
+                                readOnly
+                                required
+                                value={form.district}
+                                placeholder="Click button above..."
+                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
+                            />
                         </div>
                         <div className="field">
-                            <label>Municipality</label>
-                            <select name="municipality" required value={form.municipality} onChange={handleChange} disabled={!form.district}>
-                                <option value="">{form.district ? 'Choose Municipality' : 'Select District First'}</option>
-                                {availableMunicipalities.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
+                            <label>Municipality {form.lat && <span className="verified-badge">✓ Verified</span>}</label>
+                            <input
+                                name="municipality"
+                                type="text"
+                                readOnly
+                                required
+                                value={form.municipality}
+                                placeholder="Click button above..."
+                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
+                            />
                         </div>
                         <div className="field">
                             <label>Ward No.</label>
                             <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} />
                         </div>
                         <div className="field field-full">
-                            <label>Precise Address / Landmark</label>
-                            <input name="address" type="text" placeholder="Near XYZ temple, House #12" required value={form.address} onChange={handleChange} />
+                            <label>Precise Address / Landmark (Detected Automatically)</label>
+                            <input
+                                name="address"
+                                type="text"
+                                readOnly={form.lat ? true : false}
+                                placeholder="Auto-detected after clicking button"
+                                required
+                                value={form.address}
+                                onChange={handleChange}
+                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
+                            />
                         </div>
                     </div>
+                    {form.lat && (
+                        <div style={{ padding: '0.75rem', background: 'rgba(52, 211, 153, 0.1)', borderRadius: '8px', marginTop: '1rem', border: '1px solid rgba(52, 211, 153, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', fontSize: '0.85rem' }}>
+                            <ShieldCheck size={16} />
+                            <span><strong>Authenticity Check:</strong> Your coordinates have been captured and verified. Manual changes are disabled for security.</span>
+                        </div>
+                    )}
                     <p style={{ margin: '1rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                         <ShieldCheck size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                        Real-time location is required to prevent fraudulent listings.
+                        Real-time location is required to prevent fraudulent accounts.
                     </p>
                 </div>
 
