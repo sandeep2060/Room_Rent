@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { ImagePlus } from 'lucide-react'
 import HouseLoader from '../components/HouseLoader'
+import FeedbackPopup from '../components/FeedbackPopup'
 
 // Fix for default Leaflet marker icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -45,6 +46,7 @@ export default function ProviderEditListing() {
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
     const [error, setError] = useState(null)
+    const [feedback, setFeedback] = useState(null)
 
     // Form State
     const [title, setTitle] = useState('')
@@ -145,8 +147,10 @@ export default function ProviderEditListing() {
 
             if (updateError) throw updateError
 
-            alert('Room updated successfully!')
-            navigate('/dashboard-provider/listings')
+            setFeedback({ type: 'success', message: 'Room updated successfully!' })
+            setTimeout(() => {
+                navigate('/dashboard-provider/listings')
+            }, 2500)
 
         } catch (err) {
             console.error(err)
@@ -364,6 +368,13 @@ export default function ProviderEditListing() {
                 </button>
             </form>
             {loading && <HouseLoader message="Saving your changes..." />}
+            {feedback && (
+                <FeedbackPopup
+                    type={feedback.type}
+                    message={feedback.message}
+                    onClose={() => setFeedback(null)}
+                />
+            )}
         </div>
     )
 }
