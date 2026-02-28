@@ -12,6 +12,7 @@ export default function OwnerUsers() {
     const [filterDistrict, setFilterDistrict] = useState('')
     const [filterGender, setFilterGender] = useState('')
     const [filterRole, setFilterRole] = useState('')
+    const [sortBy, setSortBy] = useState('newest') // newest, alphabetical, most_paid
 
     useEffect(() => {
         fetchUsers()
@@ -23,7 +24,6 @@ export default function OwnerUsers() {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .order('created_at', { ascending: false })
 
             if (error) throw error
             setUsers(data || [])
@@ -34,15 +34,22 @@ export default function OwnerUsers() {
         }
     }
 
-    const filteredUsers = users.filter(u => {
-        const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) ||
-            u.email?.toLowerCase().includes(search.toLowerCase()) ||
-            u.phone?.includes(search)
-        const matchesDistrict = !filterDistrict || u.district === filterDistrict
-        const matchesGender = !filterGender || u.gender === filterGender
-        const matchesRole = !filterRole || u.role === filterRole
-        return matchesSearch && matchesDistrict && matchesGender && matchesRole
-    })
+    const filteredUsers = users
+        .filter(u => {
+            const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) ||
+                u.email?.toLowerCase().includes(search.toLowerCase()) ||
+                u.phone?.includes(search)
+            const matchesDistrict = !filterDistrict || u.district === filterDistrict
+            const matchesGender = !filterGender || u.gender === filterGender
+            const matchesRole = !filterRole || u.role === filterRole
+            return matchesSearch && matchesDistrict && matchesGender && matchesRole
+        })
+        .sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at)
+            if (sortBy === 'alphabetical') return a.name.localeCompare(b.name)
+            if (sortBy === 'most_paid') return (b.total_paid_amount || 0) - (a.total_paid_amount || 0)
+            return 0
+        })
 
     if (loading) return <HouseLoader message="Retrieving user directory..." />
 
@@ -52,35 +59,37 @@ export default function OwnerUsers() {
             <p className="dashboard-subtitle">Monitor profiles, financial dues, and account status.</p>
 
             {/* Filters Bar */}
-            <div className="dashboard-card" style={{ marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1, minWidth: '250px' }}>
-                    <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--dash-text-muted)' }} size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by name, email or phone..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ paddingLeft: '2.5rem', width: '100%' }}
-                    />
+            <div className="dashboard-card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                    <div style={{ position: 'relative' }}>
+                        <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--dash-text-muted)' }} size={16} />
+                        <input
+                            type="text"
+                            placeholder="Name, Email or Phone..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ paddingLeft: '2.5rem', width: '100%', fontSize: '0.9rem' }}
+                        />
+                    </div>
+
+                    <select value={filterDistrict} onChange={(e) => setFilterDistrict(e.target.value)} style={{ fontSize: '0.9rem' }}>
+                        <option value="">All Districts</option>
+                        {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+
+                    <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ fontSize: '0.9rem' }}>
+                        <option value="">All Roles</option>
+                        <option value="seeker">Seeker</option>
+                        <option value="provider">Provider</option>
+                        <option value="owner">Owner</option>
+                    </select>
+
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ fontSize: '0.9rem', border: '1px solid var(--accent-dim)', color: 'var(--accent)' }}>
+                        <option value="newest">Sort: Newest First</option>
+                        <option value="most_paid">Sort: Most Paid</option>
+                        <option value="alphabetical">Sort: Alphabetical</option>
+                    </select>
                 </div>
-
-                <select value={filterDistrict} onChange={(e) => setFilterDistrict(e.target.value)} style={{ padding: '0.75rem 1rem' }}>
-                    <option value="">All Districts</option>
-                    {districts.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-
-                <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} style={{ padding: '0.75rem 1rem' }}>
-                    <option value="">All Genders</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                </select>
-
-                <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ padding: '0.75rem 1rem' }}>
-                    <option value="">All Roles</option>
-                    <option value="seeker">Seeker</option>
-                    <option value="provider">Provider</option>
-                </select>
             </div>
 
             {/* Users Table */}
@@ -89,65 +98,72 @@ export default function OwnerUsers() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead style={{ background: 'rgba(15, 23, 42, 0.5)', borderBottom: '1px solid var(--dash-border)' }}>
                             <tr>
-                                <th style={{ padding: '1.25rem' }}>User Profile</th>
+                                <th style={{ padding: '1.25rem' }}>User Profile & Location</th>
                                 <th>Role</th>
-                                <th>Location</th>
+                                <th>Penalty</th>
                                 <th>Wallet Dues</th>
+                                <th>Total Paid</th>
                                 <th>Status</th>
-                                <th style={{ padding: '1.25rem', textAlign: 'center' }}>Action</th>
+                                <th style={{ padding: '1.25rem', textAlign: 'center' }}>Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredUsers.map(u => (
                                 <tr key={u.id} style={{ borderBottom: '1px solid var(--dash-border)', transition: 'background 0.2s' }} className="hover:bg-slate-800/20">
                                     <td style={{ padding: '1.25rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            <div style={{ width: '45px', height: '45px', borderRadius: '50%', overflow: 'hidden', background: 'var(--dash-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', background: 'var(--dash-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                 {u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} />}
                                             </div>
                                             <div>
                                                 <p style={{ margin: 0, fontWeight: 'bold' }}>{u.name}</p>
                                                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--dash-text-muted)' }}>{u.email}</p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
+                                                    <MapPin size={12} />
+                                                    <span>{u.address || `${u.municipality}, ${u.district}`}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`badge ${u.role === 'provider' ? 'badge-accent' : 'badge-primary'}`} style={{ textTransform: 'capitalize' }}>
+                                        <span className={`badge ${u.role === 'provider' ? 'badge-accent' : u.role === 'owner' ? 'badge-secondary' : 'badge-primary'}`} style={{ textTransform: 'capitalize', fontSize: '0.7rem' }}>
                                             {u.role}
                                         </span>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                                            <MapPin size={14} className="text-accent" />
-                                            <span>{u.district}, {u.municipality}</span>
+                                        <div style={{ color: (u.penalty_amount || 0) > 0 ? '#ef4444' : 'var(--dash-text-muted)', fontWeight: 'bold' }}>
+                                            Nrs {u.penalty_amount || 0}
                                         </div>
                                     </td>
                                     <td>
-                                        <div style={{ fontWeight: 'bold', color: u.wallet_balance > 0 ? 'var(--accent)' : 'inherit' }}>
+                                        <div style={{ fontWeight: 'bold', color: u.wallet_balance > 0 ? '#fbbf24' : 'inherit' }}>
                                             Nrs {u.wallet_balance}
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--dash-text-muted)' }}>
-                                            Last Paid: {u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : 'Never'}
-                                        </p>
+                                    </td>
+                                    <td>
+                                        <div style={{ fontWeight: '800', color: 'var(--accent)' }}>
+                                            Nrs {u.total_paid_amount || 0}
+                                        </div>
                                     </td>
                                     <td>
                                         <span style={{
-                                            padding: '0.3rem 0.6rem',
-                                            borderRadius: '20px',
-                                            fontSize: '0.75rem',
+                                            padding: '0.25rem 0.5rem',
+                                            borderRadius: '4px',
+                                            fontSize: '0.7rem',
                                             background: u.is_account_active ? 'rgba(52, 211, 153, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                                             color: u.is_account_active ? '#34d399' : '#ef4444',
                                             display: 'inline-flex',
                                             alignItems: 'center',
-                                            gap: '0.25rem'
+                                            gap: '0.25rem',
+                                            fontWeight: 'bold'
                                         }}>
-                                            {u.is_account_active ? <ShieldCheck size={14} /> : <AlertCircle size={14} />}
-                                            {u.is_account_active ? 'Active' : 'Locked'}
+                                            {u.is_account_active ? <ShieldCheck size={12} /> : <AlertCircle size={12} />}
+                                            {u.is_account_active ? 'ACTIVE' : 'LOCKED'}
                                         </span>
                                     </td>
                                     <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                        <Link to={`/dashboard-owner/users/${u.id}`} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                                            Profile <ExternalLink size={14} />
+                                        <Link to={`/dashboard-owner/users/${u.id}`} className="btn-secondary" style={{ padding: '0.4rem', borderRadius: '50%', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <ExternalLink size={14} />
                                         </Link>
                                     </td>
                                 </tr>

@@ -10,7 +10,9 @@ import OwnerUsers from './OwnerUsers'
 import OwnerUserDetails from './OwnerUserDetails'
 import OwnerAnalytics from './OwnerAnalytics'
 import OwnerSecurity from './OwnerSecurity'
+import OwnerMessages from './OwnerMessages'
 import HouseLoader from '../components/HouseLoader'
+import { MessageSquare } from 'lucide-react'
 
 export default function DashboardOwner() {
     const [stats, setStats] = useState({
@@ -66,6 +68,7 @@ export default function DashboardOwner() {
                 <Route path="users" element={<OwnerUsers />} />
                 <Route path="users/:userId" element={<OwnerUserDetails />} />
                 <Route path="analytics" element={<OwnerAnalytics />} />
+                <Route path="messages" element={<OwnerMessages />} />
                 <Route path="security" element={<OwnerSecurity />} />
             </Routes>
         </DashboardLayout>

@@ -19,14 +19,25 @@ export default function OwnerAnalytics() {
     async function fetchAnalyticsData() {
         try {
             setLoading(true)
-            // Fetch payments grouped by date
-            const { data: payments } = await supabase
+
+            // Calculate start date based on range
+            const now = new Date();
+            const startDate = new Date();
+            if (timeRange === '1W') startDate.setDate(now.getDate() - 7);
+            else if (timeRange === '1M') startDate.setMonth(now.getMonth() - 1);
+            else if (timeRange === '3M') startDate.setMonth(now.getMonth() - 3);
+            else if (timeRange === '6M') startDate.setMonth(now.getMonth() - 6);
+            else if (timeRange === '1Y') startDate.setFullYear(now.getFullYear() - 1);
+            else startDate.setFullYear(now.getFullYear() - 2);
+
+            const { data: payments, error } = await supabase
                 .from('payments')
                 .select('created_at, amount')
+                .gte('created_at', startDate.toISOString())
                 .order('created_at', { ascending: true })
 
-            // Process data based on timeRange
-            // For demo/dev purposes, if no data, we'll generate some realistic trends
+            if (error) throw error
+
             if (!payments || payments.length === 0) {
                 generateDemoData()
             } else {
@@ -39,27 +50,11 @@ export default function OwnerAnalytics() {
         }
     }
 
-    const generateDemoData = () => {
-        const dummy = []
-        const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : 90
-        for (let i = days; i >= 0; i--) {
-            const date = new Date()
-            date.setDate(date.getDate() - i)
-            dummy.push({
-                date: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                revenue: Math.floor(Math.random() * 5000) + 2000,
-                bookings: Math.floor(Math.random() * 10) + 2
-            })
-        }
-        setData(dummy)
-    }
-
     const processPayments = (payments) => {
-        // Simple grouping logic (expand for 1Y/2Y as needed)
         const groups = payments.reduce((acc, p) => {
             const date = new Date(p.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
             if (!acc[date]) acc[date] = 0
-            acc[date] += (p.amount || 0)
+            acc[date] += Number(p.amount || 0)
             return acc
         }, {})
 
@@ -70,7 +65,21 @@ export default function OwnerAnalytics() {
         setData(chartData)
     }
 
+    const calculateTotals = (period) => {
+        const now = new Date();
+        const start = new Date();
+        if (period === 'week') start.setDate(now.getDate() - 7);
+        else start.setMonth(now.getMonth() - 1);
+
+        // This would ideally be a separate query or derived from state
+        // For now, let's use a placeholder calculation logic if state exists
+        return data.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    }
+
     if (loading) return <HouseLoader message="Calculating growth metrics..." />
+
+    const weeklyTotal = data.slice(-7).reduce((acc, curr) => acc + (curr.revenue || 0), 0);
+    const monthlyTotal = data.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
 
     return (
         <div className="owner-analytics">
@@ -78,10 +87,11 @@ export default function OwnerAnalytics() {
             <p className="dashboard-subtitle">Visualizing revenue growth and transaction volume.</p>
 
             <div className="dashboard-card" style={{ marginBottom: '2rem' }}>
+                {/* ... (chart UI remains similar) */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <TrendingUp className="text-accent" />
-                        <h3 style={{ margin: 0 }}>Revenue Trend</h3>
+                        <h3 style={{ margin: 0 }}>Revenue Trend (Nrs {monthlyTotal.toLocaleString()})</h3>
                     </div>
                     <div className="time-filters" style={{ display: 'flex', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.25rem', borderRadius: '8px' }}>
                         {['1W', '1M', '3M', '6M', '1Y', '2Y'].map(range => (
@@ -132,6 +142,7 @@ export default function OwnerAnalytics() {
                             <Tooltip
                                 contentStyle={{ background: 'var(--dash-surface)', border: '1px solid var(--dash-border)', borderRadius: '8px' }}
                                 itemStyle={{ color: 'var(--accent)' }}
+                                formatter={(value) => [`Nrs ${value.toLocaleString()}`, 'Revenue']}
                             />
                             <Area
                                 type="monotone"
@@ -146,21 +157,19 @@ export default function OwnerAnalytics() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
                 <div className="dashboard-card">
                     <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Calendar size={20} className="text-accent" /> Growth Summary
                     </h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                        <div className="summary-box" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px' }}>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>This Week</p>
-                            <h2 style={{ margin: '0.5rem 0 0' }}>Nrs 42.5k</h2>
-                            <span style={{ fontSize: '0.75rem', color: '#34d399' }}>+18.2%</span>
+                        <div className="summary-box" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>Last 7 Days</p>
+                            <h2 style={{ margin: '0.5rem 0 0', color: 'var(--accent)' }}>Nrs {weeklyTotal.toLocaleString()}</h2>
                         </div>
-                        <div className="summary-box" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px' }}>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>This Month</p>
-                            <h2 style={{ margin: '0.5rem 0 0' }}>Nrs 168k</h2>
-                            <span style={{ fontSize: '0.75rem', color: '#34d399' }}>+5.4%</span>
+                        <div className="summary-box" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>Selected Range</p>
+                            <h2 style={{ margin: '0.5rem 0 0', color: '#34d399' }}>Nrs {monthlyTotal.toLocaleString()}</h2>
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     address TEXT,
     avatar_url TEXT,
     wallet_balance DECIMAL DEFAULT 0,
+    penalty_amount DECIMAL DEFAULT 0,
+    total_paid_amount DECIMAL DEFAULT 0,
     last_payment_date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     last_payment_amount DECIMAL DEFAULT 0,
     is_account_active BOOLEAN DEFAULT true,
