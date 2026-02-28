@@ -1,8 +1,8 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { ImagePlus, MapPin, CheckCircle } from 'lucide-react'
@@ -18,6 +18,16 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Fix for map not loading properly (grey map) on mobile/modals
+function MapResizer() {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => map.invalidateSize(), 400);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+}
 
 // Map click handler component
 function LocationMarker({ position, setPosition }) {
@@ -318,6 +328,7 @@ export default function ProviderAddListing() {
                                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 />
+                                <MapResizer />
                                 <LocationMarker position={mapPosition} setPosition={setMapPosition} />
                             </MapContainer>
                         </div>
