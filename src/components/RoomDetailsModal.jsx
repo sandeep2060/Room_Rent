@@ -11,13 +11,17 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
     const [isZoomed, setIsZoomed] = useState(false)
     const [duration, setDuration] = useState(1)
 
+    const displayImages = room.images && room.images.length > 0
+        ? room.images
+        : ['/src/assets/roomblankimage.png']
+
     useEffect(() => {
         if (!room || isZoomed) return
         const interval = setInterval(() => {
-            setCurrentImageIndex((prev) => (prev + 1) % images.length)
+            setCurrentImageIndex((prev) => (prev + 1) % displayImages.length)
         }, 4000)
         return () => clearInterval(interval)
-    }, [room, isZoomed])
+    }, [room, isZoomed, displayImages.length])
     // Prevent body scrolling when modal is open
     useEffect(() => {
         document.body.style.overflow = 'hidden'
