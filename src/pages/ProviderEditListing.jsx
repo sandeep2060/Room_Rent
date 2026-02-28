@@ -130,8 +130,8 @@ export default function ProviderEditListing() {
                 people_capacity: parseInt(capacity),
                 // gender_preference: genderPref, // Missing in remote DB schema
                 address,
-                lat: mapPosition.lat,
-                lng: mapPosition.lng,
+                // lat: mapPosition.lat,
+                // lng: mapPosition.lng,
                 amenities,
                 is_active: isActive,
                 images: images

@@ -165,7 +165,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             <p style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)', marginBottom: '0.75rem' }}>Exact location and contact is shared only after booking approval (0.5km area shown).</p>
                             <div style={{ height: '200px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--dash-border)' }}>
                                 <MapContainer
-                                    center={[room.lat, room.lng]}
+                                    center={[room.lat || 27.7172, room.lng || 85.3240]}
                                     zoom={14}
                                     style={{ height: '100%', width: '100%' }}
                                     scrollWheelZoom={false}
@@ -174,7 +174,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                                 >
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                                     <Circle
-                                        center={[room.lat, room.lng]}
+                                        center={[room.lat || 27.7172, room.lng || 85.3240]}
                                         radius={500}
                                         pathOptions={{ fillColor: 'var(--accent)', color: 'var(--accent)', weight: 1, fillOpacity: 0.2 }}
                                     />
