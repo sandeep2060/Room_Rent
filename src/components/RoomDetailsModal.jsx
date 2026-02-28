@@ -73,7 +73,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                     {/* Image Gallery (Left Side on Desktop) */}
                     <div style={{ flex: '1 1 500px', background: '#000', position: 'relative', overflow: 'hidden' }}>
                         <img
-                            src={images[currentImageIndex]}
+                            src={displayImages[currentImageIndex]}
                             alt="Room"
                             style={{
                                 width: '100%',
@@ -86,7 +86,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             onClick={() => setIsZoomed(true)}
                         />
                         <div style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(0,0,0,0.6)', padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', color: 'white' }}>
-                            {currentImageIndex + 1} / {images.length}
+                            {currentImageIndex + 1} / {displayImages.length}
                         </div>
                         <button
                             onClick={() => setIsZoomed(true)}
@@ -94,9 +94,9 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                         >
                             <ZoomIn size={18} />
                         </button>
-                        {images.length > 1 && (
+                        {displayImages.length > 1 && (
                             <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', overflowX: 'auto', background: 'var(--dash-surface)' }}>
-                                {images.map((img, idx) => (
+                                {displayImages.map((img, idx) => (
                                     <img
                                         key={idx}
                                         src={img}
@@ -233,14 +233,14 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                         <X size={32} />
                     </button>
                     <img
-                        src={images[currentImageIndex]}
+                        src={displayImages[currentImageIndex]}
                         alt="Zoomed"
                         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', cursor: 'zoom-out' }}
                     />
 
-                    {images.length > 1 && (
+                    {displayImages.length > 1 && (
                         <div style={{ position: 'absolute', bottom: '2rem', display: 'flex', gap: '1rem' }}>
-                            {images.map((img, idx) => (
+                            {displayImages.map((img, idx) => (
                                 <img
                                     key={idx}
                                     src={img}

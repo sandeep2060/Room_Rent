@@ -97,7 +97,7 @@ export default function ProviderAddListing() {
                 rent_category: category,
                 price_nrs: parseInt(price),
                 people_capacity: parseInt(capacity),
-                gender_preference: genderPref,
+                // gender_preference: genderPref, // Missing in remote DB schema
                 address,
                 latitude: mapPosition.lat,
                 longitude: mapPosition.lng,
