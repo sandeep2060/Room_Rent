@@ -280,7 +280,7 @@ export default function ProviderEditListing() {
                             <select required value={category} onChange={e => setCategory(e.target.value)}>
                                 <option value="monthly">Monthly</option>
                                 <option value="daily">Daily (Day time only)</option>
-                                <option value="nightly">Nightly</option>
+                                <option value="hourly">Hourly</option>
                             </select>
                         </div>
                         <div className="field">

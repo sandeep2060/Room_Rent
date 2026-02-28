@@ -310,7 +310,7 @@ function SeekerOverview() {
                         <option value="all">All Room Types</option>
                         <option value="monthly">Monthly Rent</option>
                         <option value="daily">Daily Rent</option>
-                        <option value="nightly">Nightly Stay</option>
+                        <option value="hourly">Hourly Rent</option>
                     </select>
 
                     <select className="custom-select" value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
