@@ -23,8 +23,16 @@ L.Marker.prototype.options.icon = DefaultIcon;
 function MapResizer() {
     const map = useMap();
     useEffect(() => {
-        const timer = setTimeout(() => map.invalidateSize(), 400);
-        return () => clearTimeout(timer);
+        // Trigger resize multiple times to catch delayed mobile rendering
+        const timers = [100, 500, 1000, 2000].map(t => setTimeout(() => map.invalidateSize(), t));
+
+        const onResize = () => map.invalidateSize();
+        window.addEventListener('resize', onResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', onResize);
+        }
     }, [map]);
     return null;
 }
@@ -64,6 +72,11 @@ export default function ProviderEditListing() {
         wifi: false,
         attached_toilet: false,
         water_supply: false,
+        hot_water: false,
+        kitchen: false,
+        balcony: false,
+        furnished: false,
+        ac: false,
         bike_parking: 0,
         car_parking: 0,
         windows: 1
@@ -326,6 +339,21 @@ export default function ProviderEditListing() {
                         </label>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
                             <input type="checkbox" checked={amenities.water_supply} onChange={() => handleAmenityToggle('water_supply')} style={{ accentColor: 'var(--accent)' }} /> 24/7 Water Supply
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={amenities.hot_water} onChange={() => handleAmenityToggle('hot_water')} style={{ accentColor: 'var(--accent)' }} /> Hot Water / Geyser
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={amenities.kitchen} onChange={() => handleAmenityToggle('kitchen')} style={{ accentColor: 'var(--accent)' }} /> Kitchen Access
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={amenities.balcony} onChange={() => handleAmenityToggle('balcony')} style={{ accentColor: 'var(--accent)' }} /> Balcony
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={amenities.furnished} onChange={() => handleAmenityToggle('furnished')} style={{ accentColor: 'var(--accent)' }} /> Fully Furnished
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={amenities.ac} onChange={() => handleAmenityToggle('ac')} style={{ accentColor: 'var(--accent)' }} /> Air Conditioning
                         </label>
                     </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MapPin, X, Home, Users, Check, Maximize2, Car, Wifi, Shield, ZoomIn } from 'lucide-react'
+import { MapPin, X, Home, Users, Check, Maximize2, Car, Wifi, Shield, ZoomIn, Droplets, Utensils, Wind, Sofa } from 'lucide-react'
 import { MapContainer, TileLayer, Circle } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -153,6 +153,11 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                                 {hasAmenity(room.amenities, 'wifi') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Wifi size={16} color="var(--accent)" /> Free WiFi</div>}
                                 {hasAmenity(room.amenities, 'attached_toilet') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Check size={16} color="var(--accent)" /> Attached Toilet</div>}
                                 {hasAmenity(room.amenities, 'water_supply') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Check size={16} color="var(--accent)" /> 24/7 Water Supply</div>}
+                                {hasAmenity(room.amenities, 'hot_water') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Droplets size={16} color="var(--accent)" /> Hot Water</div>}
+                                {hasAmenity(room.amenities, 'kitchen') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Utensils size={16} color="var(--accent)" /> Kitchen Access</div>}
+                                {hasAmenity(room.amenities, 'balcony') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Check size={16} color="var(--accent)" /> Balcony</div>}
+                                {hasAmenity(room.amenities, 'furnished') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Sofa size={16} color="var(--accent)" /> Fully Furnished</div>}
+                                {hasAmenity(room.amenities, 'ac') && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Wind size={16} color="var(--accent)" /> AC</div>}
                                 {room.amenities?.car_parking > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Car size={16} color="var(--accent)" /> Car Parking ({room.amenities.car_parking})</div>}
                                 {room.amenities?.bike_parking > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Car size={16} color="var(--accent)" /> Bike Parking ({room.amenities.bike_parking})</div>}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Maximize2 size={16} color="var(--accent)" /> {room.amenities?.windows || 0} Windows</div>
