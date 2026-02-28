@@ -128,10 +128,10 @@ export default function ProviderEditListing() {
                 rent_category: category,
                 price_nrs: parseInt(price),
                 capacity: parseInt(capacity),
-                // gender_preference: genderPref, // Missing in remote DB schema
+                gender_preference: genderPref,
                 address,
-                // lat: mapPosition.lat,
-                // lng: mapPosition.lng,
+                lat: mapPosition.lat,
+                lng: mapPosition.lng,
                 amenities,
                 is_active: isActive,
                 images: images

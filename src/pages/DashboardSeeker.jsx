@@ -97,7 +97,6 @@ function SeekerOverview() {
             }
 
             // 3. Gender Filter
-            /*
             if (genderFilter === 'boy') {
                 query = query.in('gender_preference', ['all', 'boy'])
             } else if (genderFilter === 'girl') {
@@ -107,7 +106,6 @@ function SeekerOverview() {
             } else if (profile?.gender === 'girl' && genderFilter === 'all') {
                 query = query.in('gender_preference', ['all', 'girl'])
             }
-            */
 
             // 4. Price Filter
             if (debouncedMin && !isNaN(debouncedMin)) {
