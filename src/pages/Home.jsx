@@ -162,8 +162,11 @@ export default function Home() {
         setSelectedRoom(room)
     }
 
-    const handleBookRoom = async (roomId, duration) => {
-        navigate(`/dashboard-seeker?book=${roomId}&duration=${duration}`)
+    const handleBookRoom = async (roomId, duration, startTime, endTime) => {
+        let url = `/dashboard-seeker?book=${roomId}&duration=${duration}`;
+        if (startTime) url += `&startTime=${startTime}`;
+        if (endTime) url += `&endTime=${endTime}`;
+        navigate(url);
     }
 
     return (

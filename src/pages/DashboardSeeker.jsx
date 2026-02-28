@@ -49,13 +49,27 @@ function SeekerOverview() {
             fetchRecommendations()
             fetchSavedRoomIds()
 
-            // Handle incoming search from home page
-            const incomingSearch = new URLSearchParams(window.location.search).get('search')
+            // Handle incoming search or booking from home page
+            const params = new URLSearchParams(window.location.search)
+            const incomingSearch = params.get('search')
             if (incomingSearch && !searchTerm) {
                 setSearchTerm(incomingSearch)
             }
+
+            const bookId = params.get('book')
+            if (bookId && recommendedRooms.length > 0) {
+                const durationParam = params.get('duration')
+                const startParam = params.get('startTime')
+                const endParam = params.get('endTime')
+
+                // Clear URL params
+                navigate('/dashboard-seeker', { replace: true })
+
+                // Trigger booking
+                handleBookRoom(bookId, parseInt(durationParam) || 1, startParam, endParam)
+            }
         }
-    }, [profile, categoryFilter, genderFilter, debouncedSearch, debouncedMin, debouncedMax])
+    }, [profile, categoryFilter, genderFilter, debouncedSearch, debouncedMin, debouncedMax, recommendedRooms.length])
 
     async function fetchSavedRoomIds() {
         try {

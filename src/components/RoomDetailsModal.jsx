@@ -12,6 +12,13 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
     const [duration, setDuration] = useState(1)
     const [startTime, setStartTime] = useState('18:00')
     const [endTime, setEndTime] = useState('19:00')
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const displayImages = room.images && room.images.length > 0
         ? room.images
@@ -24,6 +31,24 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
         }, 4000)
         return () => clearInterval(interval)
     }, [room, isZoomed, displayImages.length])
+
+    // Auto-calculate duration for hourly bookings
+    useEffect(() => {
+        if (room.rent_category === 'hourly' && startTime && endTime) {
+            const [h1, m1] = startTime.split(':').map(Number);
+            const [h2, m2] = endTime.split(':').map(Number);
+            const totalMinutes1 = h1 * 60 + m1;
+            const totalMinutes2 = h2 * 60 + m2;
+            let diff = totalMinutes2 - totalMinutes1;
+
+            // If end time is same as start time, it's 0. If it's before, it spans to next day.
+            // But for rooms, we usually don't want 0 duration.
+            if (diff <= 0) diff += 24 * 60;
+
+            const hours = Math.ceil(diff / 60);
+            setDuration(hours);
+        }
+    }, [startTime, endTime, room.rent_category]);
 
     // Prevent body scrolling when modal is open
     useEffect(() => {
@@ -80,8 +105,16 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                 {/* Main Content Area */}
                 <div style={{ display: 'flex', flexWrap: 'wrap' }}>
 
-                    {/* Image Gallery (Left Side on Desktop) */}
-                    <div style={{ flex: '1 1 500px', background: '#000', position: 'relative', overflow: 'hidden' }}>
+                    {/* Image Gallery (Left Side on Desktop) - Now SHARP and STICKY */}
+                    <div style={{
+                        flex: '1 1 500px',
+                        background: '#000',
+                        position: isMobile ? 'relative' : 'sticky',
+                        top: 0,
+                        height: isMobile ? 'auto' : 'fit-content',
+                        zIndex: 5,
+                        alignSelf: 'flex-start'
+                    }}>
                         <img
                             src={displayImages[currentImageIndex]}
                             alt="Room"
@@ -100,7 +133,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                         </div>
                         <button
                             onClick={() => setIsZoomed(true)}
-                            style={{ position: 'absolute', bottom: '1rem', right: '1rem', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', p: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ position: 'absolute', bottom: '1rem', right: '1rem', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                             <ZoomIn size={18} />
                         </button>
@@ -128,7 +161,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                             <div>
                                 <span style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: 'var(--dash-border)', padding: '0.25rem 0.5rem', borderRadius: '4px', letterSpacing: '0.5px' }}>
-                                    {room.rent_category === 'monthly' ? 'Monthly Rent' : room.rent_category === 'daily' ? 'Daily Rent' : 'Nightly Stay'}
+                                    {room.rent_category === 'monthly' ? 'Monthly Rent' : room.rent_category === 'daily' ? 'Daily Rent' : 'Hourly Stay'}
                                 </span>
                                 <h2 style={{ fontSize: '1.75rem', margin: '0.5rem 0' }}>{room.title}</h2>
                                 <p style={{ color: 'var(--dash-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -137,7 +170,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', margin: 0 }}>Nrs {room.price_nrs}</p>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)', margin: 0 }}>/{room.rent_category === 'monthly' ? 'month' : room.rent_category === 'daily' ? 'day' : 'night'}</p>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)', margin: 0 }}>/{room.rent_category === 'monthly' ? 'month' : room.rent_category === 'daily' ? 'day' : 'hour'}</p>
                             </div>
                         </div>
 
@@ -203,23 +236,29 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             </h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--dash-surface)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setDuration(Math.max(1, duration - 1))}
-                                            style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--dash-border)', color: 'var(--dash-text)', cursor: 'pointer', fontWeight: 'bold' }}
-                                        >
-                                            -
-                                        </button>
-                                        <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 'bold' }}>{duration}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setDuration(duration + 1)}
-                                            style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
+                                    {room.rent_category === 'hourly' ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--dash-bg)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--dash-border)', color: 'var(--accent)', fontWeight: 'bold' }}>
+                                            <span style={{ fontSize: '1.2rem' }}>{duration}</span>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--dash-surface)', padding: '0.25rem 0.5rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDuration(Math.max(1, duration - 1))}
+                                                style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--dash-border)', color: 'var(--dash-text)', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                -
+                                            </button>
+                                            <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 'bold' }}>{duration}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDuration(duration + 1)}
+                                                style={{ width: '28px', height: '28px', borderRadius: '4px', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    )}
                                     <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>
                                         {room.rent_category === 'monthly' ? 'Months' : room.rent_category === 'daily' ? 'Days' : 'Hours'}
                                     </span>
