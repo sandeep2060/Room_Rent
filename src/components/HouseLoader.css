@@ -1,46 +1,69 @@
+/* ================================================
+   HouseLoader – Fixed & Responsive Preloader
+   ================================================ */
+
+/* Full-screen overlay */
+.house-loader-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050816;
+    z-index: 9999;
+    /* Ensure it covers everything, even before CSS vars resolve */
+}
+
+/* Card wrapper – responsive */
 .house-loader-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
-    padding: 2rem;
-    background: var(--bg-solid);
+    gap: 1.5rem;
+    padding: 2rem 1.5rem;
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid rgba(0, 245, 160, 0.2);
     border-radius: 20px;
-    width: 300px;
+    width: min(300px, 86vw);
+    /* responsive: never wider than 86% of screen */
+    box-shadow: 0 0 40px rgba(0, 245, 160, 0.08);
+    backdrop-filter: blur(10px);
 }
 
+/* ── House SVG stage ── */
 .house-building {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: clamp(80px, 20vw, 120px);
+    /* scales on mobile */
+    height: clamp(80px, 20vw, 120px);
 }
 
-/* Floor/Foundation */
+/* Foundation */
 .house-floor {
     position: absolute;
     bottom: 0;
     left: 10%;
     width: 80%;
     height: 6px;
-    background: var(--accent);
+    background: var(--accent, #00f5a0);
     border-radius: 10px;
     opacity: 0;
-    animation: build-layer 0.5s ease forwards 0s;
+    animation: build-layer 0.35s ease forwards 0s;
 }
 
-/* Main Body/Walls */
+/* Walls */
 .house-body {
     position: absolute;
     bottom: 6px;
     left: 17%;
     width: 66%;
     height: 0%;
-    background: var(--dash-surface);
-    border: 3px solid var(--accent);
+    background: var(--dash-surface, #111827);
+    border: 3px solid var(--accent, #00f5a0);
     border-bottom: none;
     opacity: 0;
-    animation: build-walls 1s ease forwards 0.5s;
+    animation: build-walls 0.6s ease forwards 0.3s;
 }
 
 /* Roof */
@@ -52,25 +75,27 @@
     height: 0;
     border-left: 60px solid transparent;
     border-right: 60px solid transparent;
-    border-bottom: 40px solid var(--accent);
-    transform-origin: bottom;
+    border-bottom: 40px solid var(--accent, #00f5a0);
+    transform-origin: bottom center;
     transform: scaleY(0);
     opacity: 0;
-    animation: build-roof 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 1.5s;
+    animation: build-roof 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.85s;
 }
 
-/* Door */
+/* Door – fixed transform issue */
 .house-door {
     position: absolute;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 18px;
-    height: 0%;
-    background: var(--accent);
+    height: 30px;
+    /* fixed height instead of % */
+    background: var(--accent, #00f5a0);
     border-radius: 4px 4px 0 0;
     opacity: 0;
-    animation: build-details 0.5s ease forwards 2.5s;
+    transform-origin: bottom center;
+    animation: build-door 0.35s ease forwards 1.25s;
 }
 
 /* Windows */
@@ -79,11 +104,11 @@
     top: 25%;
     width: 14px;
     height: 14px;
-    background: var(--accent-dim);
-    border: 2px solid var(--accent);
+    background: var(--accent-dim, rgba(0, 245, 160, 0.15));
+    border: 2px solid var(--accent, #00f5a0);
     border-radius: 3px;
     opacity: 0;
-    animation: build-details 0.5s ease forwards 2.8s;
+    animation: build-window 0.3s ease forwards 1.55s;
 }
 
 .house-window.left {
@@ -94,89 +119,119 @@
     right: 15%;
 }
 
-/* Progress Bar */
+/* ── Progress bar ── */
 .house-progress-bar {
     width: 100%;
-    height: 8px;
-    background: var(--dash-border);
+    height: 7px;
+    background: rgba(148, 163, 184, 0.2);
     border-radius: 10px;
     overflow: hidden;
-    position: relative;
 }
 
 .house-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    background: linear-gradient(90deg, var(--accent, #00f5a0), var(--accent2, #ff6bcb));
     width: 0%;
-    transition: width 0.3s ease;
-    box-shadow: 0 0 10px var(--accent);
+    transition: width 0.25s ease;
+    box-shadow: 0 0 8px var(--accent, #00f5a0);
 }
 
-/* Keyframes */
+/* ── Text ── */
+.loader-msg {
+    color: var(--text, #ffffff);
+    font-weight: 600;
+    font-size: clamp(0.85rem, 3vw, 1.05rem);
+    text-align: center;
+    margin: 0;
+    letter-spacing: 0.4px;
+    opacity: 0.9;
+}
+
+.loader-percent {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent, #00f5a0);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* ── Keyframes ── */
 @keyframes build-layer {
-    0% {
-        transform: translateY(20px) scaleX(0);
+    from {
+        transform: scaleX(0);
         opacity: 0;
     }
 
-    100% {
-        transform: translateY(0) scaleX(1);
+    to {
+        transform: scaleX(1);
         opacity: 1;
     }
 }
 
 @keyframes build-walls {
-    0% {
+    from {
         height: 0%;
         opacity: 0;
     }
 
-    100% {
+    to {
         height: 50%;
         opacity: 1;
     }
 }
 
 @keyframes build-roof {
-    0% {
+    from {
         transform: scaleY(0);
         opacity: 0;
     }
 
-    100% {
+    to {
         transform: scaleY(1);
         opacity: 1;
     }
 }
 
-@keyframes build-details {
-    0% {
-        transform: scale(0) translateX(-50%);
+/* Door gets its own keyframe – no translateX conflict */
+@keyframes build-door {
+    from {
         opacity: 0;
+        transform: translateX(-50%) scaleY(0);
     }
 
-    100% {
-        transform: scale(1) translateX(-50%);
+    to {
         opacity: 1;
+        transform: translateX(-50%) scaleY(1);
     }
 }
 
-/* Message styling */
-.loader-msg {
-    color: var(--text);
-    font-weight: 600;
-    font-size: 1.1rem;
-    text-align: center;
-    margin: 0;
-    letter-spacing: 0.5px;
+/* Windows fade+scale in */
+@keyframes build-window {
+    from {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-.loader-percent {
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--accent);
+/* ── Responsive tweaks ── */
+@media (max-width: 480px) {
+    .house-loader-container {
+        gap: 1.2rem;
+        padding: 1.5rem 1.2rem;
+    }
+
+    .house-roof {
+        border-left-width: 46px;
+        border-right-width: 46px;
+        border-bottom-width: 32px;
+    }
 }

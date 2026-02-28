@@ -6,7 +6,7 @@ export default function ProtectedRoute({ children, allowedRole }) {
     const { session, profile, loading } = useAuth()
 
     if (loading) {
-        return <HouseLoader message="Building your personalized nest..." />
+        return <HouseLoader message="Building your personalized nest..." duration={900} />
     }
 
     // Not logged in -> go to login
@@ -16,7 +16,7 @@ export default function ProtectedRoute({ children, allowedRole }) {
 
     // Logged in but profile not yet loaded -> wait
     if (!profile) {
-        return <HouseLoader message="Verifying your digital keys..." />
+        return <HouseLoader message="Verifying your digital keys..." duration={700} />
     }
 
     // Logged in, profile loaded, but role doesn't match -> go to respective dashboard

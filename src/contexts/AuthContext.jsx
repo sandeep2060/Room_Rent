@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import HouseLoader from '../components/HouseLoader'
 
 const AuthContext = createContext()
 
@@ -82,7 +83,10 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading
+                ? <HouseLoader message="Finding your space..." duration={1200} />
+                : children
+            }
         </AuthContext.Provider>
     )
 }
