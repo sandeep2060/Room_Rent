@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS public.bookings (
     total_price_nrs DECIMAL,
     seeker_fee DECIMAL DEFAULT 0,
     provider_fee DECIMAL DEFAULT 0,
+    start_time TIME,
+    end_time TIME,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 

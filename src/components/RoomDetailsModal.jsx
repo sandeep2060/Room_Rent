@@ -10,6 +10,8 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [isZoomed, setIsZoomed] = useState(false)
     const [duration, setDuration] = useState(1)
+    const [startTime, setStartTime] = useState('18:00')
+    const [endTime, setEndTime] = useState('19:00')
 
     const displayImages = room.images && room.images.length > 0
         ? room.images
@@ -22,6 +24,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
         }, 4000)
         return () => clearInterval(interval)
     }, [room, isZoomed, displayImages.length])
+
     // Prevent body scrolling when modal is open
     useEffect(() => {
         document.body.style.overflow = 'hidden'
@@ -30,7 +33,14 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
 
     if (!room) return null
 
-
+    const handleBook = () => {
+        if (room.rent_category === 'hourly') {
+            onRequestBook(room.id, duration, startTime, endTime);
+        } else {
+            onRequestBook(room.id, duration);
+        }
+        onClose();
+    }
 
     return (
         <div style={{
@@ -189,19 +199,44 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
 
                         <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--dash-bg)', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
                             <h3 style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--dash-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Booking Duration
+                                Booking Details
                             </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={duration}
-                                    onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                                    style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-surface)', color: 'var(--dash-text)', outline: 'none' }}
-                                />
-                                <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>
-                                    {room.rent_category === 'monthly' ? 'Months' : room.rent_category === 'daily' ? 'Days' : 'Hours'}
-                                </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={duration}
+                                        onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
+                                        style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--dash-border)', background: 'var(--dash-surface)', color: 'var(--dash-text)', outline: 'none' }}
+                                    />
+                                    <span style={{ fontSize: '1.1rem', fontWeight: '500' }}>
+                                        {room.rent_category === 'monthly' ? 'Months' : room.rent_category === 'daily' ? 'Days' : 'Hours'}
+                                    </span>
+                                </div>
+
+                                {room.rent_category === 'hourly' && (
+                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                        <div className="field" style={{ flex: 1, minWidth: '120px' }}>
+                                            <label style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>Start Time</label>
+                                            <input
+                                                type="time"
+                                                value={startTime}
+                                                onChange={(e) => setStartTime(e.target.value)}
+                                                className="custom-input"
+                                            />
+                                        </div>
+                                        <div className="field" style={{ flex: 1, minWidth: '120px' }}>
+                                            <label style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>End Time (Est.)</label>
+                                            <input
+                                                type="time"
+                                                value={endTime}
+                                                onChange={(e) => setEndTime(e.target.value)}
+                                                className="custom-input"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
                                 Total Price: <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Nrs {room.price_nrs * duration}</span>
@@ -212,10 +247,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             <button
                                 className="btn-primary"
                                 style={{ flex: 1, padding: '1rem', fontSize: '1.1rem' }}
-                                onClick={() => {
-                                    onRequestBook(room.id, duration);
-                                    onClose();
-                                }}
+                                onClick={handleBook}
                             >
                                 Request Booking
                             </button>

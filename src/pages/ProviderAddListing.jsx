@@ -139,6 +139,29 @@ export default function ProviderAddListing() {
         }
     }
 
+    const CounterInput = ({ label, value, onIncrement, onDecrement }) => (
+        <div className="field">
+            <label>{label}</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--dash-surface)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--dash-border)', width: 'fit-content' }}>
+                <button
+                    type="button"
+                    onClick={onDecrement}
+                    style={{ width: '30px', height: '30px', borderRadius: '4px', border: 'none', background: 'var(--dash-border)', color: 'var(--dash-text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                >
+                    -
+                </button>
+                <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{value}</span>
+                <button
+                    type="button"
+                    onClick={onIncrement}
+                    style={{ width: '30px', height: '30px', borderRadius: '4px', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                >
+                    +
+                </button>
+            </div>
+        </div>
+    )
+
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ marginBottom: '2rem' }}>
@@ -330,21 +353,27 @@ export default function ProviderAddListing() {
                         </label>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
-                        <div className="field">
-                            <label>Windows Count</label>
-                            <input type="number" min="0" value={amenities.windows} onChange={e => handleAmenityNumber('windows', e.target.value)} style={{ width: '100px' }} />
-                        </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+                        <CounterInput
+                            label="Windows Count"
+                            value={amenities.windows}
+                            onIncrement={() => handleAmenityNumber('windows', amenities.windows + 1)}
+                            onDecrement={() => handleAmenityNumber('windows', Math.max(0, amenities.windows - 1))}
+                        />
 
-                        <div className="field">
-                            <label>Bike Parking Space</label>
-                            <input type="number" min="0" value={amenities.bike_parking} onChange={e => handleAmenityNumber('bike_parking', e.target.value)} style={{ width: '100px' }} />
-                        </div>
+                        <CounterInput
+                            label="Bike Parking Space"
+                            value={amenities.bike_parking}
+                            onIncrement={() => handleAmenityNumber('bike_parking', amenities.bike_parking + 1)}
+                            onDecrement={() => handleAmenityNumber('bike_parking', Math.max(0, amenities.bike_parking - 1))}
+                        />
 
-                        <div className="field">
-                            <label>Car Parking Space</label>
-                            <input type="number" min="0" value={amenities.car_parking} onChange={e => handleAmenityNumber('car_parking', e.target.value)} style={{ width: '100px' }} />
-                        </div>
+                        <CounterInput
+                            label="Car Parking Space"
+                            value={amenities.car_parking}
+                            onIncrement={() => handleAmenityNumber('car_parking', amenities.car_parking + 1)}
+                            onDecrement={() => handleAmenityNumber('car_parking', Math.max(0, amenities.car_parking - 1))}
+                        />
                     </div>
                 </section>
 

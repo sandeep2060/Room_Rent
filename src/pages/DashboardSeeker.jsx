@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Routes, Route } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
-import { Search, MapPin, Heart, Calendar, MessageSquare, User, Settings, LogOut, Check, X, Filter } from 'lucide-react'
+import { Search, MapPin, Heart, Calendar, MessageSquare, User, Settings, LogOut, Check, X, Filter, Clock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import Messages from '../components/Messages'
@@ -126,7 +126,7 @@ function SeekerOverview() {
         }
     }
 
-    async function handleBookRoom(roomId, duration) {
+    async function handleBookRoom(roomId, duration, startTime = null, endTime = null) {
         if (!window.confirm(`Request to book this room for ${duration} ${recommendedRooms.find(r => r.id === roomId)?.rent_category === 'monthly' ? 'months' : recommendedRooms.find(r => r.id === roomId)?.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
         try {
             // Check if already booked
@@ -156,7 +156,9 @@ function SeekerOverview() {
                 status: 'pending',
                 stay_duration: duration,
                 total_price_nrs: room.price_nrs * duration,
-                seeker_fee: fee
+                seeker_fee: fee,
+                start_time: startTime,
+                end_time: endTime
             }])
 
             if (error) throw error
@@ -493,8 +495,8 @@ function SeekerBookings() {
             const { data, error } = await supabase
                 .from('bookings')
                 .select(`
-                    id, start_date, end_date, status, total_price_nrs,
-                    rooms ( title, address, images )
+                    id, start_date, status, total_price_nrs, stay_duration, start_time, end_time,
+                    rooms ( title, address, images, id, rent_category )
                 `)
                 .eq('seeker_id', profile.id)
                 .order('created_at', { ascending: false })
@@ -563,6 +565,11 @@ function SeekerBookings() {
                                 </div>
                                 <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--dash-text-muted)' }}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><Calendar size={14} /> {booking.start_date}</span>
+                                    {booking.rooms?.rent_category === 'hourly' && booking.start_time && (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--accent)' }}>
+                                            <Clock size={14} /> {booking.start_time.slice(0, 5)} - {booking.end_time?.slice(0, 5)}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>

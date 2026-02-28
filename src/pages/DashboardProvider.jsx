@@ -37,8 +37,8 @@ function ProviderAnalytics() {
             const { data: bookingsData, error } = await supabase
                 .from('bookings')
                 .select(`
-                    id, start_date, status, total_price_nrs, stay_duration,
-                    rooms ( title, rent_category ),
+                    id, room_id, start_date, status, total_price_nrs, stay_duration, start_time, end_time,
+                    rooms ( title, rent_category, id ),
                     seeker:profiles!bookings_seeker_id_fkey ( name )
                 `)
                 .eq('provider_id', profile.id)
@@ -81,6 +81,14 @@ function ProviderAnalytics() {
                 .eq('id', bookingId)
 
             if (error) throw error
+
+            // If accepted, also mark the room as inactive (closed for others)
+            if (newStatus === 'accepted' && booking.room_id) {
+                await supabase
+                    .from('rooms')
+                    .update({ is_active: false })
+                    .eq('id', booking.room_id)
+            }
 
             // Update provider wallet if fee incurred
             if (providerFee > 0) {
@@ -184,6 +192,11 @@ function ProviderAnalytics() {
                                         <div style={{ fontSize: '0.75rem', color: 'var(--dash-text-muted)', marginTop: '0.25rem' }}>
                                             Duration: {booking.stay_duration || 1} {booking.rooms?.rent_category === 'monthly' ? 'Months' : booking.rooms?.rent_category === 'daily' ? 'Days' : 'Hours'}
                                         </div>
+                                        {booking.rooms?.rent_category === 'hourly' && booking.start_time && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem', fontWeight: '500' }}>
+                                                Schedule: {booking.start_time.slice(0, 5)} - {booking.end_time?.slice(0, 5)}
+                                            </div>
+                                        )}
                                     </td>
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '0.9rem' }}>{booking.rooms?.title}</td>
                                     <td style={{ padding: '1rem 1.5rem' }}>
