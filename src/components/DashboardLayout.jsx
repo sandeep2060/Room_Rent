@@ -1,5 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Compass, Heart, MessageSquare, User, Calendar, PlusCircle, PieChart, Menu, X, LogOut, CreditCard } from 'lucide-react'
+import {
+    Home, User, LogOut, ChevronLeft, ChevronRight,
+    MessageSquare, Heart, Bookmark, LayoutDashboard,
+    PlusCircle, List, CreditCard, ShieldCheck, TrendingUp, Users
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -43,7 +47,7 @@ export default function DashboardLayout({ children, role }) {
 
     const seekerLinks = [
         { name: 'Overview', path: '/dashboard-seeker', icon: Home, end: true },
-        { name: 'My Bookings', path: '/dashboard-seeker/bookings', icon: Compass },
+        { name: 'My Bookings', path: '/dashboard-seeker/bookings', icon: Bookmark },
         { name: 'Saved Rooms', path: '/dashboard-seeker/saved', icon: Heart },
         { name: 'Wallet', path: '/dashboard-seeker/wallet', icon: CreditCard },
         { name: 'Messages', path: '/dashboard-seeker/messages', icon: MessageSquare },
@@ -51,16 +55,33 @@ export default function DashboardLayout({ children, role }) {
     ]
 
     const providerLinks = [
-        { name: 'Analytics', path: '/dashboard-provider', icon: PieChart, end: true },
-        { name: 'My Listings', path: '/dashboard-provider/listings', icon: Home },
+        { name: 'Dashboard', path: '/dashboard-provider', icon: LayoutDashboard, end: true },
+        { name: 'My Listings', path: '/dashboard-provider/listings', icon: List },
         { name: 'Add Listing', path: '/dashboard-provider/add', icon: PlusCircle },
-        { name: 'Requests & Calendar', path: '/dashboard-provider/calendar', icon: Calendar },
         { name: 'Wallet', path: '/dashboard-provider/wallet', icon: CreditCard },
         { name: 'Messages', path: '/dashboard-provider/messages', icon: MessageSquare },
         { name: 'Profile', path: '/dashboard-provider/profile', icon: User },
     ]
 
-    const navLinks = role === 'seeker' ? seekerLinks : providerLinks
+    const ownerLinks = [
+        { name: 'Master Stats', path: '/dashboard-owner', icon: LayoutDashboard, end: true },
+        { name: 'User Directory', path: '/dashboard-owner/users', icon: Users },
+        { name: 'Analytics', path: '/dashboard-owner/analytics', icon: TrendingUp },
+        { name: 'Security', path: '/dashboard-owner/security', icon: ShieldCheck },
+        { name: 'Messages', path: '/dashboard-owner/messages', icon: MessageSquare },
+        { name: 'Profile', path: '/dashboard-owner/profile', icon: User },
+    ]
+
+    let navLinks
+    if (role === 'seeker') {
+        navLinks = seekerLinks
+    } else if (role === 'provider') {
+        navLinks = providerLinks
+    } else if (role === 'owner') {
+        navLinks = ownerLinks
+    } else {
+        navLinks = []
+    }
 
     return (
         <div className={`dash-layout theme-${role}`}>
@@ -68,7 +89,7 @@ export default function DashboardLayout({ children, role }) {
             <header className="dash-mobile-header">
                 <div className="dash-logo">🏠 RoomRent</div>
                 <button className="dash-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    {mobileMenuOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                 </button>
             </header>
 
@@ -90,7 +111,9 @@ export default function DashboardLayout({ children, role }) {
                         </div>
                         <div className="dash-user-info">
                             <span className="name">{profile?.name || 'User'}</span>
-                            <span className="role">{role === 'seeker' ? 'Room Seeker' : 'Room Provider'}</span>
+                            <span className="role">
+                                {role === 'seeker' ? 'Room Seeker' : role === 'provider' ? 'Room Provider' : 'Admin'}
+                            </span>
                         </div>
                     </div>
 

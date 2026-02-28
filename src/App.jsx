@@ -10,6 +10,8 @@ import DashboardProvider from './pages/DashboardProvider'
 import ResetPassword from './pages/ResetPassword'
 import PaymentRequired from './pages/PaymentRequired'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import AdminLogin from './pages/AdminLogin'
+import DashboardOwner from './pages/DashboardOwner'
 import './App.css'
 
 export default function App() {
@@ -22,6 +24,7 @@ export default function App() {
         <Route path="/reset-password" element={<><Navbar /><main><ResetPassword /></main><Footer /></>} />
         <Route path="/payment-required" element={<PaymentRequired />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
 
         {/* Seeker Dashboard Routes */}
         <Route
@@ -39,6 +42,15 @@ export default function App() {
           element={
             <ProtectedRoute allowedRole="provider">
               <DashboardProvider />
+            </ProtectedRoute>
+          }
+        />
+        {/* Owner Dashboard Routes */}
+        <Route
+          path="/dashboard-owner/*"
+          element={
+            <ProtectedRoute allowedRole="owner">
+              <DashboardOwner />
             </ProtectedRoute>
           }
         />

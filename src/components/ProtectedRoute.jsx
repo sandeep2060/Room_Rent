@@ -19,13 +19,15 @@ export default function ProtectedRoute({ children, allowedRole }) {
         return <HouseLoader message="Verifying your digital keys..." />
     }
 
-    // Logged in, profile loaded, but role doesn't match -> go home or to correct dashboard
+    // Logged in, profile loaded, but role doesn't match -> go to respective dashboard
     if (allowedRole && profile.role !== allowedRole) {
+        if (profile.role === 'owner') return <Navigate to="/dashboard-owner" replace />
         return <Navigate to={`/dashboard-${profile.role}`} replace />
     }
 
     // Account deactivated due to overdue payments
-    if (!profile.is_account_active) {
+    // Admins/Owners are never deactivated by this logic
+    if (profile.role !== 'owner' && !profile.is_account_active) {
         return <Navigate to="/payment-required" replace />
     }
 
