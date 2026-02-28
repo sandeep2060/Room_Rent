@@ -197,7 +197,7 @@ export default function Login() {
                                 Forgot password?
                             </button>
                         </div>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 required

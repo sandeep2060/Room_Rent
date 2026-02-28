@@ -224,7 +224,7 @@ export default function Signup() {
                     </div>
                     <div className="field">
                         <label>Password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
                             <input
                                 name="password"
                                 type={showPassword ? 'text' : 'password'}
@@ -248,7 +248,7 @@ export default function Signup() {
                     </div>
                     <div className="field">
                         <label>Confirm password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
                             <input
                                 name="confirmPassword"
                                 type={showConfirmPassword ? 'text' : 'password'}

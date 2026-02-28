@@ -71,7 +71,7 @@ export default function ResetPassword() {
                 <div className="auth-grid">
                     <div className="field field-full">
                         <label>New Password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 required
@@ -97,7 +97,7 @@ export default function ResetPassword() {
                     </div>
                     <div className="field field-full">
                         <label>Confirm New Password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 required
