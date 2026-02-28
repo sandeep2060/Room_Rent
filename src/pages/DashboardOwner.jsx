@@ -3,7 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import {
-    Users, Home, TrendingUp, HandCoins, AlertCircle,
+    Users, User, Home, TrendingUp, HandCoins, AlertCircle,
     ChevronRight, MapPin, Search, Filter, Download
 } from 'lucide-react'
 import OwnerUsers from './OwnerUsers'
