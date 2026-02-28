@@ -86,7 +86,7 @@ export default function ProviderAddListing() {
                 description,
                 rent_category: category,
                 price_nrs: parseInt(price),
-                capacity: parseInt(capacity),
+                people_capacity: parseInt(capacity),
                 gender_preference: genderPref,
                 address,
                 latitude: mapPosition.lat,

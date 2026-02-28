@@ -79,7 +79,7 @@ export default function ProviderEditListing() {
             setDescription(data.description || '')
             setCategory(data.rent_category || 'monthly')
             setPrice(data.price_nrs || '')
-            setCapacity(data.capacity || '1')
+            setCapacity(data.people_capacity || '1')
             setGenderPref(data.gender_preference || 'all')
             setAddress(data.address || '')
             setIsActive(data.is_active)
@@ -118,7 +118,7 @@ export default function ProviderEditListing() {
                 description,
                 rent_category: category,
                 price_nrs: parseInt(price),
-                capacity: parseInt(capacity),
+                people_capacity: parseInt(capacity),
                 gender_preference: genderPref,
                 address,
                 latitude: mapPosition.lat,
