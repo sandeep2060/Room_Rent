@@ -142,12 +142,17 @@ export default function Signup() {
                 }
             })
 
-            if (signUpError) throw signUpError
+            if (signUpError) {
+                if (signUpError.message && (signUpError.message.includes('User already registered') || signUpError.message.includes('User already exists'))) {
+                    throw new Error('An account with this email already exists. Please login instead.')
+                }
+                throw signUpError
+            }
 
-            setFeedback({ type: 'success', message: 'Account Created Successfully!' })
+            setFeedback({ type: 'success', message: 'Account Created Successfully! Please check your email for confirmation.' })
             setTimeout(() => {
                 navigate('/login')
-            }, 2000)
+            }, 3000)
         } catch (err) {
             setFeedback({ type: 'error', message: err.message })
         } finally {

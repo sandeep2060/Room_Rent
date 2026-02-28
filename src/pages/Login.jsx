@@ -29,7 +29,14 @@ export default function Login() {
                 password,
             })
 
-            if (signInError) throw signInError
+            if (signInError) {
+                if (signInError.message.includes('Invalid login credentials')) {
+                    throw new Error('Incorrect email or password. Please try again.')
+                } else if (signInError.message.includes('Email not confirmed')) {
+                    throw new Error('Please confirm your email address before logging in.')
+                }
+                throw signInError
+            }
 
             // Get profile
             const { data: profile, error: profileError } = await supabase
@@ -41,7 +48,7 @@ export default function Login() {
             if (profileError) throw profileError
 
             if (profile.role !== role) {
-                throw new Error(`You are not registered as a ${role === 'seeker' ? 'Room needy user' : 'Room provider user'}.`)
+                throw new Error(`This account is not registered as a ${role === 'seeker' ? 'Room needy user' : 'Room provider user'}.`)
             }
 
             // Success
