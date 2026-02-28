@@ -9,6 +9,7 @@ import DashboardSeeker from './pages/DashboardSeeker'
 import DashboardProvider from './pages/DashboardProvider'
 import ResetPassword from './pages/ResetPassword'
 import PaymentRequired from './pages/PaymentRequired'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import './App.css'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/signup" element={<><Navbar /><main><Signup /></main><Footer /></>} />
         <Route path="/reset-password" element={<><Navbar /><main><ResetPassword /></main><Footer /></>} />
         <Route path="/payment-required" element={<PaymentRequired />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* Seeker Dashboard Routes */}
         <Route
