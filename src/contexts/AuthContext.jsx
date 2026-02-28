@@ -47,6 +47,11 @@ export function AuthProvider({ children }) {
 
             if (error) {
                 console.error('Error fetching profile:', error)
+                // If profile was deleted (e.g., during database reset), force logout
+                if (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406')) {
+                    supabase.auth.signOut()
+                    setProfile(null)
+                }
             } else {
                 let currentProfile = data
                 // Deactivation Logic: Check if wallet has balance and debt is > 30 days old
