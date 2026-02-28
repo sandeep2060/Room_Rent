@@ -94,8 +94,8 @@ export default function ProviderEditListing() {
             setIsActive(data.is_active)
             setImages(data.images || [])
 
-            if (data.latitude && data.longitude) {
-                setMapPosition({ lat: data.latitude, lng: data.longitude })
+            if (data.lat && data.lng) {
+                setMapPosition({ lat: data.lat, lng: data.lng })
             }
             if (data.amenities) {
                 setAmenities(prev => ({ ...prev, ...data.amenities }))
@@ -130,8 +130,8 @@ export default function ProviderEditListing() {
                 people_capacity: parseInt(capacity),
                 // gender_preference: genderPref, // Missing in remote DB schema
                 address,
-                latitude: mapPosition.lat,
-                longitude: mapPosition.lng,
+                lat: mapPosition.lat,
+                lng: mapPosition.lng,
                 amenities,
                 is_active: isActive,
                 images: images

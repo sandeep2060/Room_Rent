@@ -99,8 +99,8 @@ export default function ProviderAddListing() {
                 people_capacity: parseInt(capacity),
                 // gender_preference: genderPref, // Missing in remote DB schema
                 address,
-                latitude: mapPosition.lat,
-                longitude: mapPosition.lng,
+                lat: mapPosition.lat,
+                lng: mapPosition.lng,
                 amenities,
                 images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80']
             }
