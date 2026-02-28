@@ -4,7 +4,7 @@ import { adToBs, bsToAd } from '@sbmdkl/nepali-date-converter'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
-import { Eye, EyeOff, User, Mail, Lock, CheckCircle2, XCircle } from 'lucide-react'
+import { Eye, EyeOff, User, UserCircle, UserPlus, Mail, Lock, CheckCircle2, XCircle } from 'lucide-react'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
 
