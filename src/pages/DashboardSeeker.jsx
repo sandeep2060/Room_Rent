@@ -179,15 +179,18 @@ function SeekerOverview() {
                     next.delete(roomId)
                     return next
                 })
+                setFeedback({ type: 'success', message: 'Room removed from saved!' })
             } else {
                 const { error } = await supabase
                     .from('saved_rooms')
                     .insert([{ user_id: profile.id, room_id: roomId }])
                 if (error) throw error
                 setSavedRoomIds(prev => new Set(prev).add(roomId))
+                setFeedback({ type: 'success', message: 'Room saved to your wishlist! ❤️' })
             }
         } catch (error) {
             console.error('Error toggling save', error)
+            setFeedback({ type: 'error', message: 'Failed to update wishlist.' })
         }
     }
 
@@ -411,7 +414,8 @@ function SeekerSaved() {
                 .eq('user_id', profile.id)
 
             if (error) throw error
-            setSavedRooms(data.map(item => item.rooms) || [])
+            // Filter out any null rooms in case a saved room was deleted
+            setSavedRooms(data.map(item => item.rooms).filter(r => r !== null) || [])
         } catch (error) {
             console.error('Error fetching saved rooms', error)
         } finally {
