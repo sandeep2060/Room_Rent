@@ -35,9 +35,10 @@ export default function DashboardOwner() {
             const { data: payments } = await supabase.from('payments').select('amount')
             const earned = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0
 
-            // 2. Currently due from users (Sum of wallet_balance)
-            const { data: profiles } = await supabase.from('profiles').select('wallet_balance, role')
+            // 2. Financial Metrics from Profiles
+            const { data: profiles } = await supabase.from('profiles').select('wallet_balance, penalty_amount, role')
             const receivable = profiles?.reduce((sum, p) => sum + (p.wallet_balance || 0), 0) || 0
+            const penalties = profiles?.reduce((sum, p) => sum + (p.penalty_amount || 0), 0) || 0
 
             // 3. User counts
             const totalUsers = profiles?.length || 0
@@ -48,7 +49,7 @@ export default function DashboardOwner() {
             setStats({
                 totalEarned: earned,
                 receivable: receivable,
-                unpaid: receivable, // Same for now in this context
+                unpaid: receivable + penalties,
                 totalUsers,
                 activeRooms: roomCount || 0
             })

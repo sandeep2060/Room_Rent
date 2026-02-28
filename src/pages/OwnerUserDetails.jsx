@@ -115,13 +115,54 @@ export default function OwnerUserDetails() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <span>Account Status</span>
                             <span style={{ color: user.is_account_active ? '#34d399' : '#ef4444', fontWeight: 'bold' }}>
-                                {user.is_account_active ? 'ACTIVATED' : 'DEACTIVATED'}
+                                {user.is_account_active ? 'ACTIVATED' : 'LOCKED'}
                             </span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span>Current Dues</span>
-                            <span style={{ color: user.wallet_balance > 0 ? 'var(--accent)' : 'inherit', fontWeight: 'bold' }}>Nrs {user.wallet_balance}</span>
+                            <span>Wallet Balance</span>
+                            <span style={{ color: user.wallet_balance > 0 ? '#fbbf24' : 'inherit', fontWeight: 'bold' }}>Nrs {user.wallet_balance}</span>
                         </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span>Penalty Amount</span>
+                            <span style={{ color: user.penalty_amount > 0 ? '#ef4444' : 'inherit', fontWeight: 'bold' }}>Nrs {user.penalty_amount || 0}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', paddingTop: '0.5rem', borderTop: '1px solid var(--dash-border)' }}>
+                            <span style={{ fontWeight: 'bold' }}>Total Payable</span>
+                            <span style={{ color: 'var(--accent)', fontWeight: '800' }}>Nrs {(Number(user.wallet_balance || 0) + Number(user.penalty_amount || 0)).toLocaleString()}</span>
+                        </div>
+
+                        {/* last payment detail */}
+                        {user.last_payment_date && (
+                            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(52, 211, 153, 0.05)', borderRadius: '8px', fontSize: '0.85rem', border: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399' }}>
+                                    <ShieldCheck size={14} />
+                                    <span>Last Payment Success</span>
+                                </div>
+                                <div style={{ marginTop: '0.35rem', fontWeight: 'bold' }}>
+                                    Nrs {user.last_payment_amount || 0} on {new Date(user.last_payment_date).toLocaleDateString()}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* payment deadline calculation */}
+                        {user.last_payment_date && (
+                            <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.85rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--dash-text-muted)' }}>
+                                    <Clock size={14} />
+                                    <span>Payment Deadline</span>
+                                </div>
+                                <div style={{ marginTop: '0.35rem', fontWeight: 'bold' }}>
+                                    {(() => {
+                                        const lastPay = new Date(user.last_payment_date);
+                                        const nextPay = new Date(lastPay);
+                                        nextPay.setDate(lastPay.getDate() + 30);
+                                        const diff = nextPay.getTime() - new Date().getTime();
+                                        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                                        return days > 0 ? `${days} days remaining` : <span style={{ color: '#ef4444' }}>{Math.abs(days)} days overdue</span>;
+                                    })()}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -1,5 +1,13 @@
 -- MASTER SQL SCHEMA FOR ROOMRENT NEPAL
--- WARNING: Running this will drop and recreate tables if they exist.
+-- This script will reset and rebuild the entire database schema.
+
+-- CLEANUP (Uncomment if you want a total reset)
+-- DROP TABLE IF EXISTS public.payments CASCADE;
+-- DROP TABLE IF EXISTS public.messages CASCADE;
+-- DROP TABLE IF EXISTS public.saved_rooms CASCADE;
+-- DROP TABLE IF EXISTS public.bookings CASCADE;
+-- DROP TABLE IF EXISTS public.rooms CASCADE;
+-- DROP TABLE IF EXISTS public.profiles CASCADE;
 
 -- 1. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -108,19 +116,37 @@ DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profi
 CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
 
 DROP POLICY IF EXISTS "Rooms are viewable by everyone" ON public.rooms;
 CREATE POLICY "Rooms are viewable by everyone" ON public.rooms FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Providers can manage own rooms" ON public.rooms;
-CREATE POLICY "Providers can manage own rooms" ON public.rooms FOR ALL USING (auth.uid() = provider_id);
+CREATE POLICY "Providers can manage own rooms" ON public.rooms FOR ALL USING (auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
 
 DROP POLICY IF EXISTS "Parties can view bookings" ON public.bookings;
 CREATE POLICY "Parties can view bookings" ON public.bookings FOR SELECT USING (auth.uid() = seeker_id OR auth.uid() = provider_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
 
+-- Messages Policies
 DROP POLICY IF EXISTS "Parties can view messages" ON public.messages;
 CREATE POLICY "Parties can view messages" ON public.messages FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+
+DROP POLICY IF EXISTS "Users can send messages" ON public.messages;
+CREATE POLICY "Users can send messages" ON public.messages FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+DROP POLICY IF EXISTS "Receiver can mark as read" ON public.messages;
+CREATE POLICY "Receiver can mark as read" ON public.messages FOR UPDATE USING (auth.uid() = receiver_id);
+
+-- Payments Policies
+DROP POLICY IF EXISTS "Users can view own payments" ON public.payments;
+CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'owner'));
+
+DROP POLICY IF EXISTS "System can insert payments" ON public.payments;
+CREATE POLICY "System can insert payments" ON public.payments FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Saved Rooms
+DROP POLICY IF EXISTS "Users can manage saved rooms" ON public.saved_rooms;
+CREATE POLICY "Users can manage saved rooms" ON public.saved_rooms FOR ALL USING (auth.uid() = user_id);
 
 -- ASSIGN OWNER ROLE (Run this after creating the user in Auth)
 -- UPDATE public.profiles SET role = 'owner' WHERE email = 'sandeepgaire8@gmail.com';

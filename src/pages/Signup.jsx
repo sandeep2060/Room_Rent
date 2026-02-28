@@ -420,55 +420,57 @@ export default function Signup() {
                         </button>
                     </div>
 
-                    <div className="auth-grid" style={{ opacity: form.lat ? 1 : 0.6, pointerEvents: form.lat ? 'auto' : 'none' }}>
+                    {!form.lat ? (
+                        <div style={{ textAlign: 'center', padding: '2.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ padding: '1rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '50%' }}>
+                                <MapPin size={32} style={{ color: 'var(--dash-text-muted)' }} />
+                            </div>
+                            <div>
+                                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-main)' }}>Verification Required</h4>
+                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem' }}>Tap the pulsing button above to capture your authentic location.</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="location-verified-card">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(52, 211, 153, 0.2)' }}>
+                                <ShieldCheck size={20} />
+                                <span style={{ fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.5px' }}>AUTHENTICITY SECURED</span>
+                            </div>
+
+                            <div className="verified-data-row">
+                                <span className="verified-label">District</span>
+                                <span className="verified-value">{form.district}</span>
+                            </div>
+                            <div className="verified-data-row">
+                                <span className="verified-label">Municipality</span>
+                                <span className="verified-value">{form.municipality}</span>
+                            </div>
+                            <div className="verified-data-row">
+                                <span className="verified-label">Precise Address</span>
+                                <span className="verified-value">{form.address || 'Detected Landmark Location'}</span>
+                            </div>
+
+                            <div style={{ marginTop: '1.25rem', fontSize: '0.7rem', color: '#34d399', opacity: 0.8, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Lock size={10} /> Secure Background Track: Manual Editing Disabled
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="auth-grid" style={{ marginTop: '1.5rem' }}>
                         <div className="field">
-                            <label>District {form.lat && <span className="verified-badge">✓ Verified</span>}</label>
+                            <label>Ward No. (Local Detail)</label>
+                            <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} placeholder="e.g. 5" />
+                        </div>
+                        <div className="field">
+                            <label>Verification Token</label>
                             <input
-                                name="district"
                                 type="text"
                                 readOnly
-                                required
-                                value={form.district}
-                                placeholder="Click button above..."
-                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
-                            />
-                        </div>
-                        <div className="field">
-                            <label>Municipality {form.lat && <span className="verified-badge">✓ Verified</span>}</label>
-                            <input
-                                name="municipality"
-                                type="text"
-                                readOnly
-                                required
-                                value={form.municipality}
-                                placeholder="Click button above..."
-                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
-                            />
-                        </div>
-                        <div className="field">
-                            <label>Ward No.</label>
-                            <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} />
-                        </div>
-                        <div className="field field-full">
-                            <label>Precise Address / Landmark (Detected Automatically)</label>
-                            <input
-                                name="address"
-                                type="text"
-                                readOnly={form.lat ? true : false}
-                                placeholder="Auto-detected after clicking button"
-                                required
-                                value={form.address}
-                                onChange={handleChange}
-                                style={{ background: form.lat ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)' }}
+                                value={form.lat ? `${form.lat.toFixed(4)}, ${form.lng.toFixed(4)}` : 'Pending...'}
+                                style={{ background: 'rgba(15, 23, 42, 0.4)', fontSize: '0.8rem', color: 'var(--text-muted)' }}
                             />
                         </div>
                     </div>
-                    {form.lat && (
-                        <div style={{ padding: '0.75rem', background: 'rgba(52, 211, 153, 0.1)', borderRadius: '8px', marginTop: '1rem', border: '1px solid rgba(52, 211, 153, 0.3)', display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', fontSize: '0.85rem' }}>
-                            <ShieldCheck size={16} />
-                            <span><strong>Authenticity Check:</strong> Your coordinates have been captured and verified. Manual changes are disabled for security.</span>
-                        </div>
-                    )}
                     <p style={{ margin: '1rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                         <ShieldCheck size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
                         Real-time location is required to prevent fraudulent accounts.

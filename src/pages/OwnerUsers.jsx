@@ -187,9 +187,35 @@ export default function OwnerUsers() {
                                         </span>
                                     </td>
                                     <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                        <Link to={`/dashboard-owner/users/${u.id}`} className="btn-secondary" style={{ padding: '0.4rem', borderRadius: '50%', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <ExternalLink size={14} />
-                                        </Link>
+                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                            <button
+                                                onClick={async () => {
+                                                    const newStatus = !u.is_account_active;
+                                                    const { error } = await supabase.from('profiles').update({ is_account_active: newStatus }).eq('id', u.id);
+                                                    if (!error) fetchUsers();
+                                                }}
+                                                className="btn-text"
+                                                style={{ color: u.is_account_active ? '#ef4444' : '#34d399', fontSize: '0.7rem', textDecoration: 'none' }}
+                                            >
+                                                {u.is_account_active ? 'Deactivate' : 'Activate'}
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (confirm('Clear all penalties for this user?')) {
+                                                        const { error } = await supabase.from('profiles').update({ penalty_amount: 0 }).eq('id', u.id);
+                                                        if (!error) fetchUsers();
+                                                    }
+                                                }}
+                                                className="btn-text"
+                                                style={{ color: '#fbbf24', fontSize: '0.7rem', textDecoration: 'none' }}
+                                                disabled={!u.penalty_amount}
+                                            >
+                                                Clear Penalty
+                                            </button>
+                                            <Link to={`/dashboard-owner/users/${u.id}`} className="btn-secondary" style={{ padding: '0.4rem', borderRadius: '50%', width: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <ExternalLink size={14} />
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
