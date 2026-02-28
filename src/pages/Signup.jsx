@@ -456,24 +456,39 @@ export default function Signup() {
                         </div>
                     )}
 
-                    <div className="auth-grid" style={{ marginTop: '1.5rem' }}>
-                        <div className="field">
-                            <label>Ward No. (Local Detail)</label>
-                            <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} placeholder="e.g. 5" />
+                    {form.lat && (
+                        <div className="auth-grid" style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                            <div className="field">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <Home size={14} className="text-accent" /> Ward Number (Manual Entry)
+                                </label>
+                                <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} placeholder="e.g. 5" />
+                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Please specify your exact ward for the listing.</p>
+                            </div>
+                            <div className="field">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <ShieldCheck size={14} style={{ color: '#34d399' }} /> Background Verification Token
+                                </label>
+                                <div style={{
+                                    padding: '0.75rem',
+                                    background: 'black',
+                                    borderRadius: '8px',
+                                    fontSize: '0.75rem',
+                                    fontFamily: 'monospace',
+                                    color: '#34d399',
+                                    border: '1px solid rgba(52, 211, 153, 0.2)',
+                                    display: 'flex',
+                                    justifyContent: 'center'
+                                }}>
+                                    SECURE_GPS_{form.lat.toFixed(4)}_{form.lng.toFixed(4)}_VERIFIED
+                                </div>
+                            </div>
                         </div>
-                        <div className="field">
-                            <label>Verification Token</label>
-                            <input
-                                type="text"
-                                readOnly
-                                value={form.lat ? `${form.lat.toFixed(4)}, ${form.lng.toFixed(4)}` : 'Pending...'}
-                                style={{ background: 'rgba(15, 23, 42, 0.4)', fontSize: '0.8rem', color: 'var(--text-muted)' }}
-                            />
-                        </div>
-                    </div>
-                    <p style={{ margin: '1rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    )}
+
+                    <p style={{ margin: '1.5rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                         <ShieldCheck size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                        Real-time location is required to prevent fraudulent accounts.
+                        Real-time background tracking is active during this session to prevent fraudulent accounts.
                     </p>
                 </div>
 

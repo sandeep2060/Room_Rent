@@ -88,19 +88,18 @@ export default function DashboardLayout({ children, role }) {
             {/* Mobile Top Bar */}
             <header className="dash-mobile-header">
                 <div className="dash-logo">🏠 RoomRent</div>
-                <button className="dash-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <button
-                            className="mobile-logout-btn"
-                            onClick={() => signOut()}
-                            title="Sign Out"
-                        >
-                            <LogOut size={20} />
-                        </button>
-                        <button className="dash-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                            {mobileMenuOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                        </button>
-                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button
+                        className="mobile-logout-btn"
+                        onClick={() => signOut()}
+                        title="Sign Out"
+                    >
+                        <LogOut size={20} />
+                    </button>
+                    <button className="dash-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                        {mobileMenuOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+                    </button>
+                </div>
             </header>
 
             {/* Sidebar (Desktop) / Slide-over (Mobile) */}
