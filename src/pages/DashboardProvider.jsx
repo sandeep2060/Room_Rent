@@ -11,6 +11,7 @@ import Messages from '../components/Messages'
 import ProfileSettings from '../components/ProfileSettings'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
+import Wallet from '../components/Wallet'
 
 function ProviderAnalytics() {
     const { profile } = useAuth()
@@ -63,18 +64,48 @@ function ProviderAnalytics() {
 
     async function updateBookingStatus(bookingId, newStatus) {
         try {
+            const booking = bookings.find(b => b.id === bookingId)
+            let providerFee = 0
+
+            // If accepting, calculate 3% fee
+            if (newStatus === 'accepted') {
+                providerFee = Math.round((booking.total_price_nrs || 0) * 0.03)
+            }
+
             const { error } = await supabase
                 .from('bookings')
-                .update({ status: newStatus })
+                .update({
+                    status: newStatus,
+                    provider_fee: providerFee
+                })
                 .eq('id', bookingId)
 
             if (error) throw error
+
+            // Update provider wallet if fee incurred
+            if (providerFee > 0) {
+                const newBalance = (profile.wallet_balance || 0) + providerFee
+                const updatePayload = { wallet_balance: newBalance }
+
+                // Start 30-day timer if first debt
+                if ((profile.wallet_balance || 0) === 0) {
+                    updatePayload.last_payment_date = new Date().toISOString()
+                }
+
+                await supabase
+                    .from('profiles')
+                    .update(updatePayload)
+                    .eq('id', profile.id)
+            }
 
             // Update local state
             setBookings(bookings.map(b =>
                 b.id === bookingId ? { ...b, status: newStatus } : b
             ))
-            setFeedback({ type: 'success', message: `Booking ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}` })
+            setFeedback({
+                type: 'success',
+                message: `Booking ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}! ${providerFee > 0 ? `(Fee Nrs ${providerFee} added to dues)` : ''}`
+            })
         } catch (error) {
             console.error(`Error marking booking as ${newStatus}:`, error)
             setFeedback({ type: 'error', message: 'Failed to update booking status.' })
@@ -333,6 +364,7 @@ export default function DashboardProvider() {
                 <Route path="add" element={<ProviderAddListing />} />
                 <Route path="edit/:roomId" element={<ProviderEditListing />} />
                 <Route path="calendar" element={<ProviderCalendar />} />
+                <Route path="wallet" element={<Wallet />} />
                 <Route path="messages" element={<ProviderMessages />} />
                 <Route path="profile" element={<ProfileSettings />} />
             </Routes>

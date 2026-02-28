@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Compass, Heart, MessageSquare, User, Calendar, PlusCircle, PieChart, Menu, X, LogOut } from 'lucide-react'
+import { Home, Compass, Heart, MessageSquare, User, Calendar, PlusCircle, PieChart, Menu, X, LogOut, CreditCard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -45,6 +45,7 @@ export default function DashboardLayout({ children, role }) {
         { name: 'Overview', path: '/dashboard-seeker', icon: Home, end: true },
         { name: 'My Bookings', path: '/dashboard-seeker/bookings', icon: Compass },
         { name: 'Saved Rooms', path: '/dashboard-seeker/saved', icon: Heart },
+        { name: 'Wallet', path: '/dashboard-seeker/wallet', icon: CreditCard },
         { name: 'Messages', path: '/dashboard-seeker/messages', icon: MessageSquare },
         { name: 'Profile', path: '/dashboard-seeker/profile', icon: User },
     ]
@@ -54,6 +55,7 @@ export default function DashboardLayout({ children, role }) {
         { name: 'My Listings', path: '/dashboard-provider/listings', icon: Home },
         { name: 'Add Listing', path: '/dashboard-provider/add', icon: PlusCircle },
         { name: 'Requests & Calendar', path: '/dashboard-provider/calendar', icon: Calendar },
+        { name: 'Wallet', path: '/dashboard-provider/wallet', icon: CreditCard },
         { name: 'Messages', path: '/dashboard-provider/messages', icon: MessageSquare },
         { name: 'Profile', path: '/dashboard-provider/profile', icon: User },
     ]

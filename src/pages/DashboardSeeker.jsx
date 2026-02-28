@@ -10,6 +10,7 @@ import RoomDetailsModal from '../components/RoomDetailsModal'
 import RoomImageCarousel from '../components/RoomImageCarousel'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
+import Wallet from '../components/Wallet'
 
 function SeekerOverview() {
     const { profile } = useAuth()
@@ -147,18 +148,35 @@ function SeekerOverview() {
             // Retrieve room price/provider
             const room = recommendedRooms.find(r => r.id === roomId)
 
+            const fee = Math.round(room.price_nrs * duration * 0.02)
+
             const { error } = await supabase.from('bookings').insert([{
                 room_id: roomId,
                 seeker_id: profile.id,
                 provider_id: room.provider_id,
-                start_date: new Date().toISOString().split('T')[0], // Today as placeholder
+                start_date: new Date().toISOString().split('T')[0],
                 status: 'pending',
                 stay_duration: duration,
-                total_price_nrs: room.price_nrs * duration
+                total_price_nrs: room.price_nrs * duration,
+                seeker_fee: fee
             }])
 
             if (error) throw error
-            setFeedback({ type: 'success', message: 'Room Booked Successfully!' })
+
+            // Update user wallet and debt timer
+            const newBalance = (profile.wallet_balance || 0) + fee
+            const updatePayload = { wallet_balance: newBalance }
+            // Start the 30-day timer if this is the first debt
+            if ((profile.wallet_balance || 0) === 0) {
+                updatePayload.last_payment_date = new Date().toISOString()
+            }
+
+            await supabase
+                .from('profiles')
+                .update(updatePayload)
+                .eq('id', profile.id)
+
+            setFeedback({ type: 'success', message: `Booking Requested! (Fee: Nrs ${fee} added to wallet)` })
         } catch (error) {
             console.error('Error booking room', error)
             setFeedback({ type: 'error', message: 'Booking Failed.' })
@@ -615,6 +633,7 @@ export default function DashboardSeeker() {
                 <Route index element={<SeekerOverview />} />
                 <Route path="bookings" element={<SeekerBookings />} />
                 <Route path="saved" element={<SeekerSaved />} />
+                <Route path="wallet" element={<Wallet />} />
                 <Route path="messages" element={<SeekerMessages />} />
                 <Route path="profile" element={<ProfileSettings />} />
             </Routes>

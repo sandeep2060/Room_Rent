@@ -24,5 +24,10 @@ export default function ProtectedRoute({ children, allowedRole }) {
         return <Navigate to={`/dashboard-${profile.role}`} replace />
     }
 
+    // Account deactivated due to overdue payments
+    if (!profile.is_account_active) {
+        return <Navigate to="/payment-required" replace />
+    }
+
     return children
 }

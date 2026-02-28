@@ -47,7 +47,23 @@ export function AuthProvider({ children }) {
             if (error) {
                 console.error('Error fetching profile:', error)
             } else {
-                setProfile(data)
+                let currentProfile = data
+                // Deactivation Logic: Check if wallet has balance and debt is > 30 days old
+                if (currentProfile.wallet_balance > 0 && currentProfile.last_payment_date) {
+                    const lastPayment = new Date(currentProfile.last_payment_date)
+                    const thirtyDaysAgo = new Date()
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+                    if (lastPayment < thirtyDaysAgo && currentProfile.is_account_active) {
+                        // Mark as inactive in DB
+                        await supabase
+                            .from('profiles')
+                            .update({ is_account_active: false })
+                            .eq('id', userId)
+                        currentProfile.is_account_active = false
+                    }
+                }
+                setProfile(currentProfile)
             }
         } catch (err) {
             console.error(err)
