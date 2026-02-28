@@ -134,7 +134,7 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                         <div style={{ display: 'flex', gap: '1.5rem', padding: '1rem 0', borderTop: '1px solid var(--dash-border)', borderBottom: '1px solid var(--dash-border)', marginBottom: '1.5rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Users size={20} color="var(--dash-text-muted)" />
-                                <span>Max {room.people_capacity} People</span>
+                                <span>Max {room.capacity} People</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <Home size={20} color="var(--dash-text-muted)" />

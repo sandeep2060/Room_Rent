@@ -88,7 +88,7 @@ export default function ProviderEditListing() {
             setDescription(data.description || '')
             setCategory(data.rent_category || 'monthly')
             setPrice(data.price_nrs || '')
-            setCapacity(data.people_capacity || '1')
+            setCapacity(data.capacity || '1')
             setGenderPref(data.gender_preference || 'all')
             setAddress(data.address || '')
             setIsActive(data.is_active)
@@ -127,7 +127,7 @@ export default function ProviderEditListing() {
                 description,
                 rent_category: category,
                 price_nrs: parseInt(price),
-                people_capacity: parseInt(capacity),
+                capacity: parseInt(capacity),
                 // gender_preference: genderPref, // Missing in remote DB schema
                 address,
                 // lat: mapPosition.lat,

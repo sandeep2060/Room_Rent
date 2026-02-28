@@ -350,7 +350,7 @@ export default function Home() {
                                         <MapPin size={14} /> Area in {listing.address.split(',').pop().trim()}
                                     </p>
                                     <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {listing.people_capacity} Capacity</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {listing.capacity} Capacity</span>
                                     </div>
                                 </div>
                             </article>
