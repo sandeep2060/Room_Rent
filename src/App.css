@@ -1291,6 +1291,44 @@
   border-color: var(--accent);
 }
 
+.gender-toggle-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.gender-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.gender-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.gender-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 245, 160, 0.15);
+}
+
+.gender-btn span {
+  font-weight: 500;
+}
+
 /* Role-based theming for auth forms */
 .auth-form.role-seeker .btn-primary {
   background: var(--accent);

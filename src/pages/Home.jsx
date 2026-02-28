@@ -199,7 +199,14 @@ export default function Home() {
                 </div>
                 <div className="hero-content">
                     <p className="hero-pill">
-                        Night mode · Nepal focused · 3D look
+                        {profile ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <MapPin size={14} style={{ color: 'var(--accent)' }} />
+                                {profile.district} • {profile.municipality}
+                            </span>
+                        ) : (
+                            "Night mode • Nepal focused • 3D look"
+                        )}
                     </p>
                     <h1 className="hero-title">
                         <span className="line">Find Your <i style={{ color: 'var(--accent)' }}>Nest</i></span>

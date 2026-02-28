@@ -270,15 +270,42 @@ export default function Signup() {
                         </div>
                         {validationErrors.confirmPassword && <span className="error-text">{validationErrors.confirmPassword}</span>}
                     </div>
-                    <div className="field">
+                    <div className="field field-full">
                         <label>Gender</label>
-                        <select name="gender" required value={form.gender} onChange={handleChange}>
-                            <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                            <option value="prefer_not">Prefer not to say</option>
-                        </select>
+                        <div className="gender-toggle-buttons">
+                            <button
+                                type="button"
+                                className={form.gender === 'male' ? 'gender-btn active' : 'gender-btn'}
+                                onClick={() => setForm(prev => ({ ...prev, gender: 'male' }))}
+                            >
+                                <User size={20} />
+                                <span>Male</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={form.gender === 'female' ? 'gender-btn active' : 'gender-btn'}
+                                onClick={() => setForm(prev => ({ ...prev, gender: 'female' }))}
+                            >
+                                <UserCircle size={20} />
+                                <span>Female</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={form.gender === 'other' ? 'gender-btn active' : 'gender-btn'}
+                                onClick={() => setForm(prev => ({ ...prev, gender: 'other' }))}
+                            >
+                                <UserPlus size={20} />
+                                <span>Other</span>
+                            </button>
+                            <button
+                                type="button"
+                                className={form.gender === 'prefer_not' ? 'gender-btn active' : 'gender-btn'}
+                                onClick={() => setForm(prev => ({ ...prev, gender: 'prefer_not' }))}
+                            >
+                                <Lock size={18} />
+                                <span>Private</span>
+                            </button>
+                        </div>
                     </div>
                     <div className="field">
                         <label>Date of birth (AD)</label>
