@@ -10,11 +10,12 @@ import HouseLoader from '../components/HouseLoader'
 export default function OwnerAnalytics() {
     const [data, setData] = useState([])
     const [timeRange, setTimeRange] = useState('1M')
+    const [customRange, setCustomRange] = useState({ start: '', end: '' })
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         fetchAnalyticsData()
-    }, [timeRange])
+    }, [timeRange, customRange])
 
     async function fetchAnalyticsData() {
         try {
@@ -22,24 +23,39 @@ export default function OwnerAnalytics() {
 
             // Calculate start date based on range
             const now = new Date();
-            const startDate = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+
             if (timeRange === '1W') startDate.setDate(now.getDate() - 7);
             else if (timeRange === '1M') startDate.setMonth(now.getMonth() - 1);
             else if (timeRange === '3M') startDate.setMonth(now.getMonth() - 3);
             else if (timeRange === '6M') startDate.setMonth(now.getMonth() - 6);
             else if (timeRange === '1Y') startDate.setFullYear(now.getFullYear() - 1);
-            else startDate.setFullYear(now.getFullYear() - 2);
+            else if (timeRange === '2Y') startDate.setFullYear(now.getFullYear() - 2);
+            else if (timeRange === 'custom' && customRange.start) {
+                startDate = new Date(customRange.start);
+                if (customRange.end) endDate = new Date(customRange.end);
+            } else {
+                startDate.setMonth(now.getMonth() - 1); // Default to 1M
+            }
 
-            const { data: payments, error } = await supabase
+            let query = supabase
                 .from('payments')
                 .select('created_at, amount')
                 .gte('created_at', startDate.toISOString())
                 .order('created_at', { ascending: true })
 
+            if (timeRange === 'custom' && customRange.end) {
+                query = query.lte('created_at', endDate.toISOString())
+            }
+
+            const { data: payments, error } = await query
+
             if (error) throw error
 
             if (!payments || payments.length === 0) {
-                generateDemoData()
+                setData([])
+                // generateDemoData() // Removed to show real empty state if no payments
             } else {
                 processPayments(payments)
             }
@@ -65,21 +81,10 @@ export default function OwnerAnalytics() {
         setData(chartData)
     }
 
-    const calculateTotals = (period) => {
-        const now = new Date();
-        const start = new Date();
-        if (period === 'week') start.setDate(now.getDate() - 7);
-        else start.setMonth(now.getMonth() - 1);
-
-        // This would ideally be a separate query or derived from state
-        // For now, let's use a placeholder calculation logic if state exists
-        return data.reduce((sum, item) => sum + (item.revenue || 0), 0);
-    }
-
     if (loading) return <HouseLoader message="Calculating growth metrics..." />
 
     const weeklyTotal = data.slice(-7).reduce((acc, curr) => acc + (curr.revenue || 0), 0);
-    const monthlyTotal = data.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
+    const rangeTotal = data.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
 
     return (
         <div className="owner-analytics">
@@ -87,33 +92,65 @@ export default function OwnerAnalytics() {
             <p className="dashboard-subtitle">Visualizing revenue growth and transaction volume.</p>
 
             <div className="dashboard-card" style={{ marginBottom: '2rem' }}>
-                {/* ... (chart UI remains similar) */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <TrendingUp className="text-accent" />
-                        <h3 style={{ margin: 0 }}>Revenue Trend (Nrs {monthlyTotal.toLocaleString()})</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <TrendingUp className="text-accent" />
+                            <h3 style={{ margin: 0 }}>Revenue Trend (Nrs {rangeTotal.toLocaleString()})</h3>
+                        </div>
+                        <div className="time-filters" style={{ display: 'flex', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.25rem', borderRadius: '8px' }}>
+                            {['1W', '1M', '3M', '6M', '1Y', '2Y', 'custom'].map(range => (
+                                <button
+                                    key={range}
+                                    onClick={() => setTimeRange(range)}
+                                    className={`filter-btn ${timeRange === range ? 'active' : ''}`}
+                                    style={{
+                                        border: 'none',
+                                        padding: '0.4rem 0.8rem',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        background: timeRange === range ? 'var(--accent)' : 'transparent',
+                                        color: timeRange === range ? 'white' : 'var(--dash-text-muted)',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >
+                                    {range}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="time-filters" style={{ display: 'flex', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.25rem', borderRadius: '8px' }}>
-                        {['1W', '1M', '3M', '6M', '1Y', '2Y'].map(range => (
+
+                    {timeRange === 'custom' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--dash-border)' }}>
+                            <div className="field" style={{ margin: 0, flex: 1 }}>
+                                <label style={{ fontSize: '0.7rem', marginBottom: '0.25rem' }}>Start Date</label>
+                                <input
+                                    type="date"
+                                    value={customRange.start}
+                                    onChange={(e) => setCustomRange(p => ({ ...p, start: e.target.value }))}
+                                    style={{ padding: '0.5rem', fontSize: '0.85rem' }}
+                                />
+                            </div>
+                            <div className="field" style={{ margin: 0, flex: 1 }}>
+                                <label style={{ fontSize: '0.7rem', marginBottom: '0.25rem' }}>End Date</label>
+                                <input
+                                    type="date"
+                                    value={customRange.end}
+                                    onChange={(e) => setCustomRange(p => ({ ...p, end: e.target.value }))}
+                                    style={{ padding: '0.5rem', fontSize: '0.85rem' }}
+                                />
+                            </div>
                             <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                className={`filter-btn ${timeRange === range ? 'active' : ''}`}
-                                style={{
-                                    border: 'none',
-                                    padding: '0.4rem 0.8rem',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    background: timeRange === range ? 'var(--accent)' : 'transparent',
-                                    color: timeRange === range ? 'white' : 'var(--dash-text-muted)',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'bold'
-                                }}
+                                className="btn-primary"
+                                style={{ padding: '0.6rem 1rem', marginTop: '1.2rem', fontSize: '0.8rem' }}
+                                onClick={() => fetchAnalyticsData()}
                             >
-                                {range}
+                                Apply
                             </button>
-                        ))}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ width: '100%', height: 400 }}>

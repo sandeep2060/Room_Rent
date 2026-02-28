@@ -58,8 +58,33 @@ export default function OwnerUsers() {
             <h1 className="dashboard-title">User Management</h1>
             <p className="dashboard-subtitle">Monitor profiles, financial dues, and account status.</p>
 
+            {/* District Distribution Summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {Object.entries(
+                    users.reduce((acc, u) => {
+                        if (!u.district) return acc;
+                        acc[u.district] = (acc[u.district] || 0) + 1;
+                        return acc;
+                    }, {})
+                )
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 6)
+                    .map(([district, count]) => (
+                        <div key={district} className="dashboard-card" style={{ padding: '1rem', textAlign: 'center', background: filterDistrict === district ? 'var(--accent-dim)' : 'var(--bg-card)', border: filterDistrict === district ? '1px solid var(--accent)' : '1px solid var(--border)', cursor: 'pointer' }} onClick={() => setFilterDistrict(filterDistrict === district ? '' : district)}>
+                            <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--dash-text-muted)', textTransform: 'uppercase' }}>{district}</p>
+                            <h3 style={{ margin: '0.25rem 0 0', color: 'var(--accent)' }}>{count} Users</h3>
+                        </div>
+                    ))}
+            </div>
+
             {/* Filters Bar */}
             <div className="dashboard-card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Filter size={18} className="text-accent" /> Filter & Search
+                    </h3>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--dash-text-muted)' }}>Found {filteredUsers.length} users</span>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
                     <div style={{ position: 'relative' }}>
                         <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--dash-text-muted)' }} size={16} />
