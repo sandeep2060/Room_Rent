@@ -141,60 +141,133 @@ export default function Signup() {
         navigator.geolocation.getCurrentPosition(async (position) => {
             const { latitude, longitude } = position.coords
 
-            try {
-                // Reverse geocode using Nominatim with identification
-                let nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&email=sandeepgaire8@gmail.com`
-                let data;
+            // Helper: fetch with a timeout so Nominatim doesn't hang for 60s+
+            const fetchWithTimeout = (url, timeoutMs = 5000) => {
+                const controller = new AbortController()
+                const timer = setTimeout(() => controller.abort(), timeoutMs)
+                return fetch(url, { signal: controller.signal })
+                    .finally(() => clearTimeout(timer))
+            }
 
+            let data = null
+
+            // ── 1st attempt: Nominatim (5s timeout) ──────────────────────────
+            try {
+                const nominatimUrl =
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
+                    `&lat=${latitude}&lon=${longitude}` +
+                    `&addressdetails=1&email=sandeepgaire8@gmail.com`
+
+                const res = await fetchWithTimeout(nominatimUrl, 5000)
+                if (res.ok) {
+                    data = await res.json()
+                    console.log('Geocoding: Nominatim ✓')
+                } else {
+                    throw new Error(`Nominatim HTTP ${res.status}`)
+                }
+            } catch (e) {
+                console.warn('Nominatim failed or timed out:', e.message)
+            }
+
+            // ── 2nd attempt: BigDataCloud (free, no key, very fast) ──────────
+            if (!data) {
                 try {
-                    const response = await fetch(nominatimUrl)
-                    if (response.ok) {
-                        data = await response.json()
+                    const bdcUrl =
+                        `https://api.bigdatacloud.net/data/reverse-geocode-client` +
+                        `?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+
+                    const res = await fetchWithTimeout(bdcUrl, 6000)
+                    if (res.ok) {
+                        const bdc = await res.json()
+                        console.log('Geocoding: BigDataCloud ✓', bdc)
+
+                        // Map to Nominatim-compatible shape
+                        const district = bdc.localityInfo?.administrative
+                            ?.find(a => a.adminLevel === 5)?.name           // Nepal district level
+                            || bdc.principalSubdivision || ''
+                        const city = bdc.city || bdc.locality || ''
+
+                        data = {
+                            display_name: [city, bdc.principalSubdivision, bdc.countryName]
+                                .filter(Boolean).join(', '),
+                            address: {
+                                state_district: district,
+                                city,
+                            }
+                        }
                     } else {
-                        throw new Error('Nominatim 403/Blocked')
+                        throw new Error(`BigDataCloud HTTP ${res.status}`)
                     }
                 } catch (e) {
-                    console.log('Nominatim failed, trying BigDataCloud fallback...')
-                    const fallbackUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-                    const fallbackRes = await fetch(fallbackUrl)
-                    const fallbackData = await fallbackRes.json()
-                    // Map BigDataCloud to Nominatim-like structure
-                    data = {
-                        display_name: `${fallbackData.locality}, ${fallbackData.principalSubdivision}, ${fallbackData.countryName}`,
-                        address: {
-                            state_district: fallbackData.principalSubdivision,
-                            city: fallbackData.city || fallbackData.locality
-                        }
-                    }
+                    console.warn('BigDataCloud failed:', e.message)
                 }
+            }
 
-                const address = data.address || {}
-                const district = address.state_district || address.county || ''
-                const municipality = address.city || address.town || address.village || address.suburb || ''
+            // ── 3rd attempt: Photon / Komoot (Nominatim-based, different infra) ─
+            if (!data) {
+                try {
+                    const photonUrl =
+                        `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&limit=1`
 
-                // Clean up "District" suffix
-                const cleanDistrict = district.replace(' District', '')
+                    const res = await fetchWithTimeout(photonUrl, 6000)
+                    if (res.ok) {
+                        const photon = await res.json()
+                        const props = photon?.features?.[0]?.properties || {}
+                        console.log('Geocoding: Photon ✓', props)
+
+                        data = {
+                            display_name: [props.name, props.city || props.state, props.country]
+                                .filter(Boolean).join(', '),
+                            address: {
+                                state_district: props.state || '',
+                                city: props.city || props.name || '',
+                            }
+                        }
+                    } else {
+                        throw new Error(`Photon HTTP ${res.status}`)
+                    }
+                } catch (e) {
+                    console.warn('Photon failed:', e.message)
+                }
+            }
+
+            // ── Apply results (or coords-only if all APIs failed) ────────────
+            if (data) {
+                const addr = data.address || {}
+                const district = (addr.state_district || addr.county || '').replace(/ District$/i, '')
+                const municipality = addr.city || addr.town || addr.village || addr.suburb || ''
 
                 setForm(prev => ({
                     ...prev,
                     lat: latitude,
                     lng: longitude,
-                    district: districts.includes(cleanDistrict) ? cleanDistrict : prev.district,
-                    municipality: municipalitiesByDistrict[cleanDistrict]?.includes(municipality) ? municipality : prev.municipality,
-                    address: data.display_name
+                    district: districts.includes(district) ? district : prev.district,
+                    municipality: municipalitiesByDistrict[district]?.includes(municipality)
+                        ? municipality
+                        : prev.municipality,
+                    address: data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
                 }))
-
                 setFeedback({ type: 'success', message: 'Location captured successfully!' })
-            } catch (err) {
-                console.error('Reverse geocoding error:', err)
-                setForm(prev => ({ ...prev, lat: latitude, lng: longitude }))
-                setFeedback({ type: 'warning', message: 'Coords captured, but failed to detect city names.' })
-            } finally {
-                setLoading(false)
+            } else {
+                // All APIs failed – save raw coords so signup can still proceed
+                setForm(prev => ({
+                    ...prev,
+                    lat: latitude,
+                    lng: longitude,
+                    address: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+                }))
+                setFeedback({ type: 'warning', message: 'GPS captured. Could not resolve address name — you may continue.' })
             }
+
+            setLoading(false)
         }, (err) => {
             setLoading(false)
             setFeedback({ type: 'error', message: 'Location access denied. Please enable location to proceed.' })
+        }, {
+            // More accurate GPS fix, with a reasonable timeout
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0,
         })
     }
 
