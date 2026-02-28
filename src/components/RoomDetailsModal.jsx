@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react'
 import { MapPin, X, Home, Users, Check, Maximize2, Car, Wifi, Shield, ZoomIn, Droplets, Utensils, Wind, Sofa } from 'lucide-react'
-import { MapContainer, TileLayer, Circle } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
 // Helper to gracefully extract boolean from JSON amenity
 const hasAmenity = (amenities, key) => amenities?.[key] === true
+
+// Fix for Leaflet map white area in modals/mobile
+function MapResizer() {
+    const map = useMap()
+    useEffect(() => {
+        setTimeout(() => {
+            map.invalidateSize()
+        }, 400)
+    }, [map])
+    return null
+}
 
 export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -213,14 +224,16 @@ export default function RoomDetailsModal({ room, onClose, onRequestBook }) {
                             <p style={{ fontSize: '0.85rem', color: 'var(--dash-text-muted)', marginBottom: '0.75rem' }}>Exact location and contact is shared only after booking approval (0.5km area shown).</p>
                             <div style={{ height: '200px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--dash-border)' }}>
                                 <MapContainer
+                                    key={`${room.id}-${isMobile}`}
                                     center={[room.lat || 27.7172, room.lng || 85.3240]}
                                     zoom={14}
                                     style={{ height: '100%', width: '100%' }}
                                     scrollWheelZoom={false}
-                                    dragging={false}
+                                    dragging={!isMobile} // Disable dragging on mobile to allow scrolling details
                                     zoomControl={false}
                                 >
                                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                    <MapResizer />
                                     <Circle
                                         center={[room.lat || 27.7172, room.lng || 85.3240]}
                                         radius={500}
