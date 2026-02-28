@@ -4,7 +4,7 @@ import { adToBs, bsToAd } from '@sbmdkl/nepali-date-converter'
 import { supabase } from '../lib/supabase'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
-import { Eye, EyeOff, User, UserCircle, UserPlus, Mail, Lock, CheckCircle2, XCircle, MapPin, ShieldCheck, Info } from 'lucide-react'
+import { Eye, EyeOff, User, UserCircle, UserPlus, Lock, MapPin } from 'lucide-react'
 import FeedbackPopup from '../components/FeedbackPopup'
 import HouseLoader from '../components/HouseLoader'
 
@@ -29,17 +29,12 @@ export default function Signup() {
         municipality: '',
         phone: '',
         ward: '',
-        address: '',
         privacyAccepted: false,
-        lat: null,
-        lng: null,
-        deviceInfo: '',
     })
 
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [error, setError] = useState(null)
-    const [submitStep, setSubmitStep] = useState('') // 'locating' | 'creating' | ''
     const [submitting, setSubmitting] = useState(false)
     const [feedback, setFeedback] = useState(null)
     const [validationErrors, setValidationErrors] = useState({
@@ -132,77 +127,7 @@ export default function Signup() {
         return `${platform} | ${userAgent}`
     }
 
-    // ── Reverse-geocode helper (pure async, no state side-effects) ──────────
-    const fetchWithTimeout = (url, timeoutMs = 5000) => {
-        const controller = new AbortController()
-        const timer = setTimeout(() => controller.abort(), timeoutMs)
-        return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer))
-    }
 
-    const reverseGeocode = async (latitude, longitude) => {
-        let data = null
-
-        // 1st: Nominatim (5s timeout)
-        try {
-            const res = await fetchWithTimeout(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1&email=sandeepgaire8@gmail.com`,
-                5000
-            )
-            if (res.ok) { data = await res.json(); console.log('Geocoding: Nominatim ✓') }
-            else throw new Error(`Nominatim HTTP ${res.status}`)
-        } catch (e) { console.warn('Nominatim failed:', e.message) }
-
-        // 2nd: BigDataCloud
-        if (!data) {
-            try {
-                const res = await fetchWithTimeout(
-                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
-                    6000
-                )
-                if (res.ok) {
-                    const bdc = await res.json()
-                    console.log('Geocoding: BigDataCloud ✓', bdc)
-                    const district = bdc.localityInfo?.administrative?.find(a => a.adminLevel === 5)?.name || bdc.principalSubdivision || ''
-                    const city = bdc.city || bdc.locality || ''
-                    data = {
-                        display_name: [city, bdc.principalSubdivision, bdc.countryName].filter(Boolean).join(', '),
-                        address: { state_district: district, city }
-                    }
-                } else throw new Error(`BigDataCloud HTTP ${res.status}`)
-            } catch (e) { console.warn('BigDataCloud failed:', e.message) }
-        }
-
-        // 3rd: Photon / Komoot
-        if (!data) {
-            try {
-                const res = await fetchWithTimeout(
-                    `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&limit=1`,
-                    6000
-                )
-                if (res.ok) {
-                    const photon = await res.json()
-                    const props = photon?.features?.[0]?.properties || {}
-                    console.log('Geocoding: Photon ✓', props)
-                    data = {
-                        display_name: [props.name, props.city || props.state, props.country].filter(Boolean).join(', '),
-                        address: { state_district: props.state || '', city: props.city || props.name || '' }
-                    }
-                } else throw new Error(`Photon HTTP ${res.status}`)
-            } catch (e) { console.warn('Photon failed:', e.message) }
-        }
-
-        return data
-    }
-
-    // ── Get GPS coords as a promise ──────────────────────────────────────────
-    const getGPSCoords = () => new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject(new Error('Geolocation not supported'))
-        navigator.geolocation.getCurrentPosition(
-            pos => resolve(pos.coords),
-            err => reject(err),
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        )
-    })
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -220,35 +145,7 @@ export default function Signup() {
         }
 
         setSubmitting(true)
-
         try {
-            // ── Step 1: Auto-fetch GPS location ─────────────────────────────
-            setSubmitStep('locating')
-            let lat = null, lng = null, address = '', district = form.district, municipality = form.municipality
-
-            try {
-                const coords = await getGPSCoords()
-                lat = coords.latitude
-                lng = coords.longitude
-
-                const geoData = await reverseGeocode(lat, lng)
-                if (geoData) {
-                    const addr = geoData.address || {}
-                    const detectedDistrict = (addr.state_district || addr.county || '').replace(/ District$/i, '')
-                    const detectedMunicipality = addr.city || addr.town || addr.village || addr.suburb || ''
-                    address = geoData.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`
-                    if (districts.includes(detectedDistrict)) district = detectedDistrict
-                    if (municipalitiesByDistrict[district]?.includes(detectedMunicipality)) municipality = detectedMunicipality
-                } else {
-                    address = `${lat.toFixed(5)}, ${lng.toFixed(5)}`
-                }
-            } catch (gpsErr) {
-                console.warn('GPS failed, proceeding without location:', gpsErr.message)
-                // Not blocking — account is still created without coords
-            }
-
-            // ── Step 2: Create account ───────────────────────────────────────
-            setSubmitStep('creating')
             const { data, error: signUpError } = await supabase.auth.signUp({
                 email: form.email,
                 password: form.password,
@@ -259,13 +156,10 @@ export default function Signup() {
                         gender: form.gender,
                         dobAd: form.dobAd,
                         dobBs: form.dobBs,
-                        district,
-                        municipality,
+                        district: form.district,
+                        municipality: form.municipality,
                         phone: form.phone,
                         ward: form.ward,
-                        address,
-                        lat,
-                        lng,
                         device_info: captureDeviceInfo(),
                         privacy_accepted: true
                     }
@@ -285,7 +179,6 @@ export default function Signup() {
             setFeedback({ type: 'error', message: err.message })
         } finally {
             setSubmitting(false)
-            setSubmitStep('')
         }
     }
 
@@ -425,27 +318,30 @@ export default function Signup() {
                     </div>
                 </div>
 
-                {/* 4. Location – auto-captured on submit */}
+                {/* 4. Location */}
                 <div className="signup-section">
                     <div className="signup-section-title">
-                        <MapPin size={18} /> Location & Security
+                        <MapPin size={18} /> Location
                     </div>
-
-                    {/* Ward Number */}
-                    <div className="field" style={{ marginBottom: '0.5rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            Ward Number
-                        </label>
-                        <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} placeholder="e.g. 5" />
-                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Your exact ward number within your municipality.</p>
-                    </div>
-
-                    {/* Auto-location notice */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.9rem 1rem', background: 'rgba(0,245,160,0.06)', border: '1px solid rgba(0,245,160,0.2)', borderRadius: '10px', marginTop: '0.75rem' }}>
-                        <ShieldCheck size={18} style={{ color: '#34d399', flexShrink: 0 }} />
-                        <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                            Your live location will be <strong style={{ color: '#34d399' }}>automatically captured</strong> when you click <em>Finish &amp; Create Account</em> for security verification.
-                        </p>
+                    <div className="auth-grid">
+                        <div className="field">
+                            <label>District</label>
+                            <select name="district" required value={form.district} onChange={handleChange}>
+                                <option value="">Select District</option>
+                                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div className="field">
+                            <label>Municipality / VDC</label>
+                            <select name="municipality" required value={form.municipality} onChange={handleChange} disabled={!form.district}>
+                                <option value="">Select Municipality</option>
+                                {availableMunicipalities.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div className="field field-full">
+                            <label>Ward Number</label>
+                            <input name="ward" type="number" min={1} max={35} required value={form.ward} onChange={handleChange} placeholder="e.g. 5" />
+                        </div>
                     </div>
                 </div>
 
@@ -458,25 +354,20 @@ export default function Signup() {
                             style={{ marginTop: '3px' }}
                         />
                         <span style={{ fontSize: '0.85rem' }}>
-                            I accept the <Link to="/privacy-policy" target="_blank" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Privacy Policy</Link> and agree to provide my authentic location data for security verification.
+                            I accept the <Link to="/privacy-policy" target="_blank" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Privacy Policy</Link> and confirm that the information I provide is accurate.
                         </span>
                     </label>
                 </div>
 
                 <button type="submit" className="btn-primary auth-submit" style={{ width: '100%', padding: '1rem' }} disabled={submitting}>
-                    {submitStep === 'locating'
-                        ? '📍 Detecting your location...'
-                        : submitStep === 'creating'
-                            ? '🏗️ Building your account...'
-                            : 'Finish & Create Account'
-                    }
+                    {submitting ? '🏗️ Creating Account...' : 'Finish & Create Account'}
                 </button>
 
                 <div className="auth-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
                     Already have an account? <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Login here</Link>
                 </div>
             </form>
-            {submitting && submitStep === 'creating' && <HouseLoader message="Setting up your new nest..." />}
+            {submitting && <HouseLoader message="Setting up your new nest..." />}
             {feedback && (
                 <FeedbackPopup
                     type={feedback.type}
