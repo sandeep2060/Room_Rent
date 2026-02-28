@@ -141,8 +141,17 @@ function SeekerOverview() {
     }
 
     async function handleBookRoom(roomId, duration, startTime = null, endTime = null) {
-        if (!window.confirm(`Request to book this room for ${duration} ${recommendedRooms.find(r => r.id === roomId)?.rent_category === 'monthly' ? 'months' : recommendedRooms.find(r => r.id === roomId)?.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
         try {
+            // 1. Ensure we have the room data (it might not be in recommendedRooms if coming from URL)
+            let room = recommendedRooms.find(r => r.id === roomId)
+            if (!room) {
+                const { data, error: roomError } = await supabase.from('rooms').select('*').eq('id', roomId).single()
+                if (roomError || !data) throw new Error('Room details not found')
+                room = data
+            }
+
+            if (!window.confirm(`Request to book "${room.title}" for ${duration} ${room.rent_category === 'monthly' ? 'months' : room.rent_category === 'daily' ? 'days' : 'hours'}?`)) return;
+
             // Check if already booked
             const { data: existing, error: checkError } = await supabase
                 .from('bookings')
@@ -156,9 +165,6 @@ function SeekerOverview() {
                 setFeedback({ type: 'warning', message: 'Active request already exists!' })
                 return
             }
-
-            // Retrieve room price/provider
-            const room = recommendedRooms.find(r => r.id === roomId)
 
             const fee = Math.round(room.price_nrs * duration * 0.02)
 
@@ -191,6 +197,13 @@ function SeekerOverview() {
                 .eq('id', profile.id)
 
             setFeedback({ type: 'success', message: `Booking Requested! (Fee: Nrs ${fee} added to wallet)` })
+
+            // Auto-navigate to bookings after 2 seconds
+            setTimeout(() => {
+                const params = new URLSearchParams(window.location.search)
+                params.set('tab', 'bookings')
+                navigate('/dashboard-seeker/bookings')
+            }, 2000)
         } catch (error) {
             console.error('Error booking room', error)
             setFeedback({ type: 'error', message: 'Booking Failed.' })

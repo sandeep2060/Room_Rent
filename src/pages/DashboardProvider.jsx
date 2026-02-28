@@ -39,7 +39,7 @@ function ProviderAnalytics() {
                 .select(`
                     id, room_id, start_date, status, total_price_nrs, stay_duration, start_time, end_time,
                     rooms ( title, rent_category, id ),
-                    seeker:profiles!bookings_seeker_id_fkey ( name )
+                    seeker:profiles!seeker_id ( name )
                 `)
                 .eq('provider_id', profile.id)
                 .order('created_at', { ascending: false })
